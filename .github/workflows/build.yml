@@ -1,0 +1,36 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B clean package
+
+      - name: Rename with commit hash
+        run: |
+          COMMIT_HASH=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          mv target/BaseKit.jar target/BaseKit-${COMMIT_HASH}.jar
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BaseKit-${{ github.sha }}
+          path: target/BaseKit-*.jar

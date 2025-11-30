@@ -1,0 +1,69 @@
+#---+----------------------------------------------------------------------------------------------------+---#
+#                                        BaseKit - Main Configuration                                        #
+#---+----------------------------------------------------------------------------------------------------+---#
+#                                                                                                            #
+# About *built-in placeholders*:                                                                             #
+#   The supported built-in placeholders vary depending on the configuration option. Refer to the comments    #
+#   for the corresponding configuration option for details.                                                  #
+#                                                                                                            #
+# About *sounds*:                                                                                            #
+# This plugin utilizes XSeries for cross-version compatibility. XSound is responsible for the cross-version  #
+# implementation of sound effects. For a complete list of sound effects, please visit:                       #
+# https://github.com/CryptoMorin/XSeries/blob/master/core/src/main/java/com/cryptomorin/xseries/XSound.java  #
+#                                                                                                            #
+#---+----------------------------------------------------------------------------------------------------+---#
+
+
+# |------------------------------------------------------------------|
+# |                          Update Checker                          |
+# |                       -------------------                        |
+# | The plugin will send a notification to the server every time it  |
+# | is started or when a player with administrator privileges enters |
+# | the server.                                                      |
+# |------------------------------------------------------------------|
+update-checker: true
+
+# |------------------------------------------------------------------|
+# |                           Player Join                            |
+# |                         ---------------                          |
+# | Message/sound effect to be triggered when a player joins the     |
+# | server.                                                          |
+# |------------------------------------------------------------------|
+# | Placeholders:                                                    |
+# |   + %%player%% - Player name                                     |
+# |------------------------------------------------------------------|
+player-join:
+  enabled: true
+  message: "&8[&a+&8] &f%%player%% has joined the server!"
+  sound: BLOCK_NOTE_BLOCK_PLING,1,2
+
+# |------------------------------------------------------------------|
+# |                           Player Quit                            |
+# |                         ---------------                          |
+# | Message/sound effect to be triggered when a player leaves the    |
+# | server.                                                          |
+# |------------------------------------------------------------------|
+# | Placeholders:                                                    |
+# |   + %%player%% - Player name                                     |
+# |------------------------------------------------------------------|
+player-quit:
+  enabled: true
+  message: "&8[&a+&8] &f%%player%% has left the server!"
+  sound: BLOCK_NOTE_BLOCK_PLING,1,0.5
+
+# |------------------------------------------------------------------|
+# |                        Disabled Commands                         |
+# |                      ---------------------                       |
+# | Message/sound effect to be triggered when a player leaves the    |
+# | server.                                                          |
+# |------------------------------------------------------------------|
+disabled-commands:
+  enabled: true
+  prompt-message: "&cThis command is disabled on this server! (/%%command%%)"
+  commands:
+    - bukkit:plugins
+    - plugins
+    - bukkit:version
+    - version
+    - ver
+    - icanhasbukkit
