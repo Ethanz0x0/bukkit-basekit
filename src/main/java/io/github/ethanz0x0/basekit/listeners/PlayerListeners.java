@@ -48,7 +48,7 @@ public class PlayerListeners implements Listener {
         Player player = event.getPlayer();
         Module.DISABLED_COMMANDS.ifEnabled(() -> {
             List<String> disabledCommands = Module.DISABLED_COMMANDS.getOption("commands", new ArrayList<>());
-            String command = event.getMessage().split(" ")[0].toLowerCase();
+            String command = event.getMessage().split(" ")[0].toLowerCase().substring(1);
             if (disabledCommands.contains(command)) {
                 event.setCancelled(true);
                 player.sendMessage(Module.DISABLED_COMMANDS.getText("prompt-message",
