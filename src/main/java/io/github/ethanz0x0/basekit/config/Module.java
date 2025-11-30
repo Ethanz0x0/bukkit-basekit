@@ -5,8 +5,6 @@ import io.github.ethanz0x0.basekit.utils.sound.SoundData;
 import io.github.ethanz0x0.nucleus.object.format.Formatter;
 import org.bukkit.ChatColor;
 
-import java.util.function.Consumer;
-
 public enum Module {
 
     PLAYER_JOIN("player-join"),
@@ -20,7 +18,7 @@ public enum Module {
     }
 
     public boolean isEnabled() {
-        return Config.getMainConfig().getBoolean(module);
+        return Config.getMainConfig().getBoolean(module + ".enabled");
     }
 
     public void ifEnabled(Runnable run) {
