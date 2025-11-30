@@ -19,6 +19,7 @@ public class PlayerListeners implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         Module.PLAYER_JOIN.ifEnabled(() -> {
+            event.setJoinMessage(null);
             Broadcaster.broadcastMessage(
                     Module.PLAYER_JOIN.getText("message",
                             BuiltinPlaceholders.builder()
@@ -32,6 +33,7 @@ public class PlayerListeners implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         Module.PLAYER_QUIT.ifEnabled(() -> {
+            event.setQuitMessage(null);
             Broadcaster.broadcastMessage(
                     Module.PLAYER_QUIT.getText("message",
                             BuiltinPlaceholders.builder()
