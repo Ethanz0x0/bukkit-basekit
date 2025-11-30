@@ -1,6 +1,6 @@
 package io.github.ethanz0x0.basekit;
 
-import io.github.ethanz0x0.basekit.config.Config;
+import io.github.ethanz0x0.basekit.listeners.PlayerListeners;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class BaseKit extends JavaPlugin {
@@ -15,8 +15,7 @@ public class BaseKit extends JavaPlugin {
     public void onEnable() {
         instance = this;
         getLogger().info("BaseKit is loading...");
-
-        Config.getMainConfig().get("");
+        getServer().getPluginManager().registerEvents(new PlayerListeners(), this);
     }
 
     @Override
