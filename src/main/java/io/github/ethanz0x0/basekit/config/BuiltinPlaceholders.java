@@ -19,7 +19,7 @@ public class BuiltinPlaceholders {
     }
 
     public PlaceholderFormat asPlaceholderFormat() {
-        return PlaceholderFormat.builder().placeholderSection("%%{@*}%%")
+        return PlaceholderFormat.builder().placeholderSection("%%@*%%")
                 .append(replacementTable).build();
     }
 
