@@ -35,7 +35,7 @@ public class PlayerListeners implements Listener {
         Module.PLAYER_QUIT.ifEnabled(() -> {
             event.setQuitMessage(null);
             Broadcaster.broadcastMessage(
-                    Module.PLAYER_QUIT.getText("message",
+                    Module.PLAYER_QUIT.getText(player, "message",
                             BuiltinPlaceholders.builder()
                                     .player(player).build())
             );
@@ -47,6 +47,9 @@ public class PlayerListeners implements Listener {
     public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
         Module.DISABLED_COMMANDS.ifEnabled(() -> {
+            if (player.hasPermission(Module.DISABLED_COMMANDS.getOption("bypass-permission", ""))) {
+                return;
+            }
             List<String> disabledCommands = Module.DISABLED_COMMANDS.getOption("commands", new ArrayList<>());
             String command = event.getMessage().split(" ")[0].toLowerCase().substring(1);
             if (disabledCommands.contains(command)) {

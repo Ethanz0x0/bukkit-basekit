@@ -1,6 +1,7 @@
 package io.github.ethanz0x0.basekit;
 
 import io.github.ethanz0x0.basekit.listeners.PlayerListeners;
+import io.github.ethanz0x0.basekit.utils.PlaceholderAPIHook;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class BaseKit extends JavaPlugin {
@@ -15,6 +16,7 @@ public class BaseKit extends JavaPlugin {
     public void onEnable() {
         instance = this;
         getLogger().info("BaseKit is loading...");
+        PlaceholderAPIHook.checkAndHook();
         getServer().getPluginManager().registerEvents(new PlayerListeners(), this);
     }
 

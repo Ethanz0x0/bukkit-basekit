@@ -1,9 +1,12 @@
 package io.github.ethanz0x0.basekit.config;
 
 import com.cryptomorin.xseries.XSound;
+import io.github.ethanz0x0.basekit.utils.PlaceholderAPIHook;
 import io.github.ethanz0x0.basekit.utils.sound.SoundData;
 import io.github.ethanz0x0.nucleus.object.format.Formatter;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 
 public enum Module {
 
@@ -31,10 +34,21 @@ public enum Module {
         return Config.getMainConfig().get(module + "." + option, def);
     }
 
+    public String getText(OfflinePlayer player, String option, BuiltinPlaceholders builtinPlaceholders) {
+        return Formatter.format(getText(player, option), builtinPlaceholders.asPlaceholderFormat());
+    }
+
     public String getText(String option, BuiltinPlaceholders builtinPlaceholders) {
-        return ChatColor.translateAlternateColorCodes('&',
-                Formatter.format(getOption(option, ""),
-                        builtinPlaceholders.asPlaceholderFormat()));
+        return Formatter.format(getText(option), builtinPlaceholders.asPlaceholderFormat());
+    }
+
+    public String getText(OfflinePlayer player, String option) {
+        String result = getText(option);
+        if (PlaceholderAPIHook.isHooked()) {
+            return PlaceholderAPI.setPlaceholders(player, result);
+        } else {
+            return result;
+        }
     }
 
     public String getText(String option) {

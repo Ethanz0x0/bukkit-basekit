@@ -24,6 +24,16 @@
 update-checker: true
 
 # |------------------------------------------------------------------|
+# |                       PlaceholderAPI Hook                        |
+# |                     -----------------------                      |
+# | By enabling this option, the plugin will automatically detect    |
+# | whether the server has installed PlaceholderAPI. If disabled,    |
+# | all placeholders related to PlaceholderAPI will be unavailable,  |
+# | whether PlaceholderAPI is installed or not.                      |
+# |------------------------------------------------------------------|
+placeholderapi-hook: true
+
+# |------------------------------------------------------------------|
 # |                           Player Join                            |
 # |                         ---------------                          |
 # | Message/sound effect to be triggered when a player joins the     |
@@ -54,16 +64,18 @@ player-quit:
 # |------------------------------------------------------------------|
 # |                        Disabled Commands                         |
 # |                      ---------------------                       |
-# | Message/sound effect to be triggered when a player leaves the    |
-# | server.                                                          |
+# | Prohibit players from executing confidential commands.           |
 # |------------------------------------------------------------------|
 disabled-commands:
   enabled: true
   prompt-message: "&cThis command is disabled on this server! (/%%command%%)"
+  bypass-permission: "basekit.bypass.disabled-commands"
   commands:
     - bukkit:plugins
     - plugins
     - bukkit:version
     - version
     - ver
+    - bukkit:pl
+    - pl
     - icanhasbukkit
