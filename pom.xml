@@ -23,6 +23,7 @@
         </resources>
 
         <plugins>
+            <!-- Write manifest with version + build number -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -37,6 +38,8 @@
                     </archive>
                 </configuration>
             </plugin>
+
+            <!-- Shade with BaseKit-${version}-${buildNumber}.jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -45,7 +48,9 @@
                     <execution>
                         <id>shade</id>
                         <phase>package</phase>
-                        <goals><goal>shade</goal></goals>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
                         <configuration>
                             <!--suppress UnresolvedMavenProperty -->
                             <finalName>BaseKit-${project.version}-${buildNumber}</finalName>
@@ -55,7 +60,6 @@
             </plugin>
         </plugins>
     </build>
-
 
     <repositories>
         <repository>
@@ -88,12 +92,6 @@
             <artifactId>nucleus-config</artifactId>
             <version>1.1.1</version>
         </dependency>
-
-        <!--        <dependency>-->
-        <!--            <groupId>io.github.ethanz0x0</groupId>-->
-        <!--            <artifactId>nucleus-common</artifactId>-->
-        <!--            <version>1.1.1</version>-->
-        <!--        </dependency>-->
 
         <dependency>
             <groupId>io.github.ethanz0x0</groupId>
