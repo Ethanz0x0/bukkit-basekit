@@ -128,9 +128,20 @@ jobs:
           BUILD: ${{ steps.buildnumber.outputs.build_number }}
         with:
           script: |
+            const fs = require("fs");
+            const path = require("path");
+
             const versionTag = `v${process.env.VERSION}-${process.env.BUILD}`;
             const shortVersion = `v${process.env.VERSION}`;
 
+            // Locate built JAR file
+            const files = fs.readdirSync("target").filter(f => f.endsWith(".jar"));
+            if (files.length === 0) {
+              throw new Error("No JAR found in target/");
+            }
+            const jarFile = path.join("target", files[0]);
+
+            // Retrieve releases
             const { data: releases } = await github.rest.repos.listReleases({
               owner: context.repo.owner,
               repo: context.repo.repo
@@ -138,12 +149,19 @@ jobs:
 
             let current = releases.find(r => r.tag_name.startsWith(shortVersion));
 
-            const commitBody = `\n---\n\n🔗 Compare changes:\nhttps://github.com/${context.repo.owner}/${context.repo.repo}/compare/${current?.tag_name || shortVersion}...${versionTag}\n`;
+            // Prepare changelog text
+            const commitBody =
+              `\n---\n\n🔗 Compare changes:\n` +
+              `https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${current?.tag_name || shortVersion}...${versionTag}\n`;
 
-            const newBody = `${context.payload.inputs?.body || ""}\n${{ steps.commitlog.outputs.body }}${commitBody}`;
+            const newBody =
+              `${{ steps.commitlog.outputs.body }}${commitBody}`;
+
+            let releaseId;
 
             if (!current) {
-              await github.rest.repos.createRelease({
+              // Create new release
+              const release = await github.rest.repos.createRelease({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 tag_name: versionTag,
@@ -152,15 +170,27 @@ jobs:
                 draft: false,
                 prerelease: false
               });
+              releaseId = release.data.id;
             } else {
-              const updated = current.body + "\n" + ${{ steps.commitlog.outputs.body }} + commitBody;
-
-              await github.rest.repos.updateRelease({
+              // Update existing release
+              const release = await github.rest.repos.updateRelease({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 release_id: current.id,
                 tag_name: versionTag,
                 name: `Release ${versionTag}`,
-                body: updated
+                body: current.body + "\n" + newBody
               });
+              releaseId = release.data.id;
             }
+
+            // Upload JAR asset
+            await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: releaseId,
+              name: files[0],
+              data: fs.readFileSync(jarFile)
+            });
+
+            console.log("Uploaded jar:", files[0]);
