@@ -44,25 +44,27 @@ jobs:
           echo "Base Version: $BASE_VERSION"
           echo "Build Number: $BUILD_NUMBER"
           echo "Full Version: $FULL_VERSION"
-          echo "Release Tag: v$BASE_VERSION" # Use v1.0 as the Tag
+          echo "Release Tag: v$BASE_VERSION"
 
       - name: Update plugin.yml with Base Version
         run: |
           # Replace the version in plugin.yml with the pure BASE_VERSION (e.g., 1.0)
           sed -i "s/^version: .*/version: $BASE_VERSION/" plugin.yml
 
-      # FIX: Replacing the failing action with a standard Maven command.
+      # Added -e flag for error visibility
       - name: Set Full Project Version in POM
         run: |
           # Use the versions-maven-plugin goal to update the <version> tag in pom.xml
-          # This sets the project version to the full build version (e.g., 1.0-1)
-          mvn versions:set -DnewVersion=${{ env.FULL_VERSION }} -DremoveSnapshot=true
+          # -B and -e flags are added for better CI/CD logging and error stack traces
+          mvn -B -e versions:set -DnewVersion=${{ env.FULL_VERSION }} -DremoveSnapshot=true
 
-      - name: Maven Build Project
+      # Added -e flag for error visibility
+      - name: Maven Build Project (Debugging Enabled)
         run: |
-          # Compile and package, passing the base version and build number as properties
-          # These properties are injected into the JAR's MANIFEST.MF via maven-jar-plugin
-          mvn clean package \
+          # Compile and package.
+          # -B: Batch mode (less verbose, better for CI)
+          # -e: Show error stack traces (critical for debugging)
+          mvn -B -e clean package \
             -DmainVersionProp=${{ env.BASE_VERSION }} \
             -DbuildNumberProp=${{ env.BUILD_NUMBER }} \
             --file pom.xml
@@ -87,11 +89,7 @@ jobs:
             COMMIT_RANGE="$LATEST_TAG..HEAD"
           fi
           
-          # 1. Get logs in the range
-          # 2. Filter lines starting with '[CL]'
-          # 3. Remove the '[CL]' prefix and any trailing spaces
-          # 4. Format with '* ' prefix and remove empty lines
-          # 5. Use 'uniq' to automatically ignore duplicate entries across commits
+          # Filter and format the Changelog
           CHANGELOG=$(git log --pretty=format:"%s%n%b" $COMMIT_RANGE | \
                       grep -E '^\s*\[CL\]' | \
                       sed -E 's/^\s*\[CL\]\s*//' | \
@@ -119,7 +117,6 @@ jobs:
           files: ${{ env.JAR_PATH }}
 
           # If a release with this tag exists, append the new changelog to the body.
-          # 'overwrite: true' ensures the JAR file and Tag are updated/replaced.
           append_body: ${{ steps.changelog.outputs.is_new_changelog == 'true' }}
           body_pre: |
             ## Build ${{ env.BUILD_NUMBER }} (Latest)
