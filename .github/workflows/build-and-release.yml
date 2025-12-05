@@ -3,76 +3,95 @@ name: Bukkit Plugin CI/CD
 on:
   push:
     branches:
-      - main
+      - main  # Assuming your primary branch is 'main'
 
 jobs:
   build_and_release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # Necessary permission to create/update Releases and Tags
 
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
         with:
+          # Fetch full commit history to generate the Changelog
           fetch-depth: 0
 
-      - name: Set Java 8 environment
+      - name: Set up Java 8 Environment
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '8'
           cache: 'maven'
 
-      - name: Get project version and build number
+      - name: Get Project Version and Build Number
         id: versioning
         run: |
+          # 1. Get the base version from POM (e.g., 1.0)
           BASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
           
+          # 2. Use Github Run Number as the build number (auto-incrementing from 1)
           BUILD_NUMBER=${{ github.run_number }}
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
           
+          # 3. Combine the full version (e.g., 1.0-1)
           FULL_VERSION="${BASE_VERSION}-${BUILD_NUMBER}"
           echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_ENV
           
-          echo "--- Version Info ---"
-          echo "Main version: $BASE_VERSION"
-          echo "Build number: $BUILD_NUMBER"
-          echo "Full version: $FULL_VERSION"
-          echo "Release Tag: v$BASE_VERSION"
+          echo "--- Versioning Information ---"
+          echo "Base Version: $BASE_VERSION"
+          echo "Build Number: $BUILD_NUMBER"
+          echo "Full Version: $FULL_VERSION"
+          echo "Release Tag: v$BASE_VERSION" # Use v1.0 as the Tag
 
-      - name: Update plugin.yml version
+      - name: Update plugin.yml with Base Version
         run: |
+          # Replace the version in plugin.yml with the pure BASE_VERSION (e.g., 1.0)
           sed -i "s/^version: .*/version: $BASE_VERSION/" plugin.yml
 
-      - name: Set full version to pom.yml
-        uses: al-jshen/action-maven-set-version@v1
-        with:
-          version: ${{ env.FULL_VERSION }}
-
-      - name: Maven build
+      # FIX: Replacing the failing action with a standard Maven command.
+      - name: Set Full Project Version in POM
         run: |
+          # Use the versions-maven-plugin goal to update the <version> tag in pom.xml
+          # This sets the project version to the full build version (e.g., 1.0-1)
+          mvn versions:set -DnewVersion=${{ env.FULL_VERSION }} -DremoveSnapshot=true
+
+      - name: Maven Build Project
+        run: |
+          # Compile and package, passing the base version and build number as properties
+          # These properties are injected into the JAR's MANIFEST.MF via maven-jar-plugin
           mvn clean package \
             -DmainVersionProp=${{ env.BASE_VERSION }} \
             -DbuildNumberProp=${{ env.BUILD_NUMBER }} \
             --file pom.xml
           
+          # Find the generated JAR file (usually the one created by the shade plugin)
           JAR_FILE=$(find target -name '*-shaded.jar' -o -name '*.jar' | grep -v 'original' | head -n 1)
           echo "JAR_PATH=$JAR_FILE" >> $GITHUB_ENV
-          echo "JAR file found: $JAR_FILE"
+          echo "Found JAR file: $JAR_FILE"
 
-      - name: Extract changelog
+      - name: Extract Changelog (Only [CL] Commits)
         id: changelog
         run: |
+          # Find the latest existing release tag (if any) to determine commit range
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           
+          # Define the commit range to check for new Changelog entries
           if [ -z "$LATEST_TAG" ]; then
+            # If no tags exist, check the last 10 commits
             COMMIT_RANGE="HEAD~10..HEAD"
           else
+            # Check commits since the latest tag
             COMMIT_RANGE="$LATEST_TAG..HEAD"
           fi
           
+          # 1. Get logs in the range
+          # 2. Filter lines starting with '[CL]'
+          # 3. Remove the '[CL]' prefix and any trailing spaces
+          # 4. Format with '* ' prefix and remove empty lines
+          # 5. Use 'uniq' to automatically ignore duplicate entries across commits
           CHANGELOG=$(git log --pretty=format:"%s%n%b" $COMMIT_RANGE | \
                       grep -E '^\s*\[CL\]' | \
                       sed -E 's/^\s*\[CL\]\s*//' | \
@@ -80,47 +99,31 @@ jobs:
                       uniq)
 
           if [ -z "$CHANGELOG" ]; then
-            echo "::set-output name=release_body::No newer [CL] changelog found。"
+            echo "::set-output name=release_body::No new [CL] changelog entries found."
             echo "::set-output name=is_new_changelog::false"
           else
             echo "::set-output name=release_body::$CHANGELOG"
             echo "::set-output name=is_new_changelog::true"
           fi
 
-      - name: Check existing release and confirm operations
-        id: check_release
+      - name: (Append/Create) Release and Upload JAR
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          RELEASE_TAG="v${{ env.BASE_VERSION }}"
-          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
-
-          RELEASE_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/$RELEASE_TAG" | \
-            jq -r '.id')
-          
-          if [ "$RELEASE_ID" != "null" ]; then
-            echo "Existing release ID: $RELEASE_ID"
-            echo "::set-output name=exists::true"
-            echo "::set-output name=id::$RELEASE_ID"
-          else
-            echo "No existing release found, new release will be created"
-            echo "::set-output name=exists::false"
-          fi
-
-      - name: Create/Update release and upload jar
-        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
+          # Use the base version as the Tag (e.g., v1.0)
+          tag_name: v${{ env.BASE_VERSION }}
           name: Release ${{ env.BASE_VERSION }}
           draft: false
           prerelease: false
           files: ${{ env.JAR_PATH }}
 
+          # If a release with this tag exists, append the new changelog to the body.
+          # 'overwrite: true' ensures the JAR file and Tag are updated/replaced.
           append_body: ${{ steps.changelog.outputs.is_new_changelog == 'true' }}
           body_pre: |
             ## Build ${{ env.BUILD_NUMBER }} (Latest)
-            - **Full version**: `${{ env.FULL_VERSION }}`
-            - **Main version**: `${{ env.BASE_VERSION }}`
+            - **Full Version**: `${{ env.FULL_VERSION }}`
+            - **Base Version**: `${{ env.BASE_VERSION }}`
           body: ${{ steps.changelog.outputs.release_body }}
           overwrite: true
