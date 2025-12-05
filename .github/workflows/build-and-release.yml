@@ -49,7 +49,24 @@ jobs:
       - name: Update plugin.yml with Base Version
         run: |
           # Replace the version in plugin.yml with the pure BASE_VERSION (e.g., 1.0)
-          sed -i "s/^version: .*/version: $BASE_VERSION/" plugin.yml
+          # Assuming plugin.yml is located in src/main/resources/ as is standard for Maven/Spigot projects.
+          # If it is in the root, change the path back to plugin.yml
+          PLUGIN_YML_PATH="src/main/resources/plugin.yml"
+          
+          if [ -f "$PLUGIN_YML_PATH" ]; then
+            echo "Updating version in $PLUGIN_YML_PATH"
+            sed -i "s/^version: .*/version: $BASE_VERSION/" "$PLUGIN_YML_PATH"
+          else
+            # Revert to root path if not found in standard Maven location
+            PLUGIN_YML_PATH="plugin.yml"
+            if [ -f "$PLUGIN_YML_PATH" ]; then
+                echo "Updating version in $PLUGIN_YML_PATH (root)"
+                sed -i "s/^version: .*/version: $BASE_VERSION/" "$PLUGIN_YML_PATH"
+            else
+                echo "Error: plugin.yml not found in repository root or src/main/resources/. Please check your file path."
+                exit 1 # Fail the build explicitly if the file is missing
+            fi
+          fi
 
       # Added -e flag for error visibility
       - name: Set Full Project Version in POM
