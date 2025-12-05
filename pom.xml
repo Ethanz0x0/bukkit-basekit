@@ -15,15 +15,7 @@
     </properties>
 
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
-
         <plugins>
-            <!-- Write manifest with version + build number -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -31,15 +23,14 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Main-Version>${project.version}</Main-Version>
                             <!--suppress UnresolvedMavenProperty -->
-                            <Build-Number>${buildNumber}</Build-Number>
+                            <Main-Version>${mainVersionProp}</Main-Version>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <Build-Number>${buildNumberProp}</Build-Number>
                         </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>
-
-            <!-- Shade with BaseKit-${version}-${buildNumber}.jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -51,10 +42,6 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
-                        <configuration>
-                            <!--suppress UnresolvedMavenProperty -->
-                            <finalName>BaseKit-${project.version}-${buildNumber}</finalName>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

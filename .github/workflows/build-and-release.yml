@@ -1,0 +1,126 @@
+name: Bukkit Plugin CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Java 8 environment
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+          cache: 'maven'
+
+      - name: Get project version and build number
+        id: versioning
+        run: |
+          BASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "BASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
+          
+          BUILD_NUMBER=${{ github.run_number }}
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
+          
+          FULL_VERSION="${BASE_VERSION}-${BUILD_NUMBER}"
+          echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_ENV
+          
+          echo "--- Version Info ---"
+          echo "Main version: $BASE_VERSION"
+          echo "Build number: $BUILD_NUMBER"
+          echo "Full version: $FULL_VERSION"
+          echo "Release Tag: v$BASE_VERSION"
+
+      - name: Update plugin.yml version
+        run: |
+          sed -i "s/^version: .*/version: $BASE_VERSION/" plugin.yml
+
+      - name: Set full version to pom.yml
+        uses: al-jshen/action-maven-set-version@v1
+        with:
+          version: ${{ env.FULL_VERSION }}
+
+      - name: Maven build
+        run: |
+          mvn clean package \
+            -DmainVersionProp=${{ env.BASE_VERSION }} \
+            -DbuildNumberProp=${{ env.BUILD_NUMBER }} \
+            --file pom.xml
+          
+          JAR_FILE=$(find target -name '*-shaded.jar' -o -name '*.jar' | grep -v 'original' | head -n 1)
+          echo "JAR_PATH=$JAR_FILE" >> $GITHUB_ENV
+          echo "JAR file found: $JAR_FILE"
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LATEST_TAG" ]; then
+            COMMIT_RANGE="HEAD~10..HEAD"
+          else
+            COMMIT_RANGE="$LATEST_TAG..HEAD"
+          fi
+          
+          CHANGELOG=$(git log --pretty=format:"%s%n%b" $COMMIT_RANGE | \
+                      grep -E '^\s*\[CL\]' | \
+                      sed -E 's/^\s*\[CL\]\s*//' | \
+                      awk '{if ($0!="") print "* "$0}' | \
+                      uniq)
+
+          if [ -z "$CHANGELOG" ]; then
+            echo "::set-output name=release_body::No newer [CL] changelog found。"
+            echo "::set-output name=is_new_changelog::false"
+          else
+            echo "::set-output name=release_body::$CHANGELOG"
+            echo "::set-output name=is_new_changelog::true"
+          fi
+
+      - name: Check existing release and confirm operations
+        id: check_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_TAG="v${{ env.BASE_VERSION }}"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+
+          RELEASE_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/$RELEASE_TAG" | \
+            jq -r '.id')
+          
+          if [ "$RELEASE_ID" != "null" ]; then
+            echo "Existing release ID: $RELEASE_ID"
+            echo "::set-output name=exists::true"
+            echo "::set-output name=id::$RELEASE_ID"
+          else
+            echo "No existing release found, new release will be created"
+            echo "::set-output name=exists::false"
+          fi
+
+      - name: Create/Update release and upload jar
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: Release ${{ env.BASE_VERSION }}
+          draft: false
+          prerelease: false
+          files: ${{ env.JAR_PATH }}
+
+          append_body: ${{ steps.changelog.outputs.is_new_changelog == 'true' }}
+          body_pre: |
+            ## Build ${{ env.BUILD_NUMBER }} (Latest)
+            - **Full version**: `${{ env.FULL_VERSION }}`
+            - **Main version**: `${{ env.BASE_VERSION }}`
+          body: ${{ steps.changelog.outputs.release_body }}
+          overwrite: true

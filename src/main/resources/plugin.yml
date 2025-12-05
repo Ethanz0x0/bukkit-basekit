@@ -1,6 +1,6 @@
 main: io.github.ethanz0x0.basekit.BaseKit
 name: BaseKit
-version: ${project.version}-${buildNumber}
+version: undefined
 api-version: 1.13
 author: Ethanz0x0
 softdepend: [ PlaceholderAPI ]
