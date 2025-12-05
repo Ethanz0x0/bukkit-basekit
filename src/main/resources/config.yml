@@ -79,3 +79,26 @@ disabled-commands:
     - bukkit:pl
     - pl
     - icanhasbukkit
+
+# |------------------------------------------------------------------|
+# |                         Welcome Message                          |
+# |                       -------------------                        |
+# | When a player joins the server, the welcome message will be sent |
+# | to that player. If the player joins the server for the first     |
+# | time, only the first-join message will be sent.                  |
+# |------------------------------------------------------------------|
+# | Placeholders:                                                    |
+# |   + %%player%% - Player name                                     |
+# |------------------------------------------------------------------|
+welcome-message:
+  enabled: true
+  welcome-message: |-
+    &6--------------------------------------------------
+    &aWelcome back to &dYour Server &a%%player%%!
+    &6--------------------------------------------------
+  first-join-message: |-
+    &6--------------------------------------------------
+    &aWelcome to &dYour Server &a%player%%%!
+    &eThis is your first time to join the server.
+    &eHope you enjoy your play!
+    &6--------------------------------------------------

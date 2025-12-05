@@ -21,11 +21,22 @@ public class PlayerListeners implements Listener {
         Module.PLAYER_JOIN.ifEnabled(() -> {
             event.setJoinMessage(null);
             Broadcaster.broadcastMessage(
-                    Module.PLAYER_JOIN.getText("message",
+                    Module.PLAYER_JOIN.getText(player, "message",
                             BuiltinPlaceholders.builder()
                                     .player(player).build())
             );
             Broadcaster.broadcastSound(Module.PLAYER_JOIN.getSound("sound"));
+        });
+        Module.WELCOME_MESSAGE.ifEnabled(() -> {
+            if (player.hasPlayedBefore()) {
+                player.sendMessage(Module.WELCOME_MESSAGE.getText(player, "welcome-message",
+                        BuiltinPlaceholders.builder()
+                                .player(player).build()));
+            } else {
+                player.sendMessage(Module.WELCOME_MESSAGE.getText(player, "first-join-message",
+                        BuiltinPlaceholders.builder()
+                                .player(player).build()));
+            }
         });
     }
 
@@ -54,7 +65,7 @@ public class PlayerListeners implements Listener {
             String command = event.getMessage().split(" ")[0].toLowerCase().substring(1);
             if (disabledCommands.contains(command)) {
                 event.setCancelled(true);
-                player.sendMessage(Module.DISABLED_COMMANDS.getText("prompt-message",
+                player.sendMessage(Module.DISABLED_COMMANDS.getText(player, "prompt-message",
                         BuiltinPlaceholders.builder().append("command", command)
                                 .build()));
             }

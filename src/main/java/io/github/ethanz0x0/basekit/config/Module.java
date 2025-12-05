@@ -12,7 +12,8 @@ public enum Module {
 
     PLAYER_JOIN("player-join"),
     PLAYER_QUIT("player-quit"),
-    DISABLED_COMMANDS("disabled-commands");
+    DISABLED_COMMANDS("disabled-commands"),
+    WELCOME_MESSAGE("welcome-message");
 
     private final String module;
 

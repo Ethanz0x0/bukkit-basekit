@@ -6,7 +6,6 @@ import io.github.ethanz0x0.nucleus.config.FileConfiguration;
 import io.github.ethanz0x0.nucleus.config.adapters.YamlConfigurationAdapter;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 
 public class Config {
