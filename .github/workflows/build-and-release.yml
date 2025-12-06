@@ -37,18 +37,18 @@ jobs:
             echo "BUILD_TAG_EXISTS=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: 🔢 Get or Reset Build Number (prefix = MAIN_VERSION-)
+      - name: 🔢 Get Build Number
         id: build_number_action
-        uses: einaregilsson/build-number@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          prefix: ${{ steps.version_extractor.outputs.MAIN_VERSION }}-
+        run: |
+          # Use GitHub run_number as build number
+          BUILD_NUMBER=${{ github.run_number }}
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
 
       - name: 📝 Set versioning variables
         id: set_vars
         run: |
           MAIN_VERSION=${{ steps.version_extractor.outputs.MAIN_VERSION }}
-          BUILD_NUMBER=${{ steps.build_number_action.outputs.build_number }}
+          BUILD_NUMBER=$BUILD_NUMBER
           FULL_VERSION="$MAIN_VERSION.$BUILD_NUMBER"
 
           echo "MAIN_VERSION=$MAIN_VERSION" >> $GITHUB_OUTPUT
@@ -140,7 +140,7 @@ jobs:
 
       - name: 🏷️ Update build-number tag (MAINVERSION-BUILDNUMBER)
         run: |
-          TAG_NAME="${{ steps.set_vars.outputs.MAIN_VERSION }}-${{ steps.set_vars.outputs.BUILD_NUMBER }}"
+          TAG_NAME="${{ steps.set_vars.outputs.MAIN_VERSION }}-$BUILD_NUMBER"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -f "$TAG_NAME"
