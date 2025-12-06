@@ -12,7 +12,7 @@ public class BaseKit extends JavaPlugin {
     public static BaseKit getInstance() {
         return instance;
     }
-    //
+
     @Override
     public void onEnable() {
         instance = this;
