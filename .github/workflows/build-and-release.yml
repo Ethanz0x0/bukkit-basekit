@@ -24,7 +24,6 @@ jobs:
       - name: ⚙️ Extract main version from pom.xml
         id: version_extractor
         run: |
-          # extract the first <version>...</version> text under project
           MAIN_VERSION=$(xmllint --xpath "/*[local-name()='project']/*[local-name()='version']/text()" pom.xml 2>/dev/null || true)
           if [ -z "$MAIN_VERSION" ]; then
             echo "Could not find <version> in pom.xml" >&2
@@ -32,7 +31,6 @@ jobs:
           fi
           echo "MAIN_VERSION=$MAIN_VERSION" >> $GITHUB_OUTPUT
 
-          # check whether a release/tag for the main version already exists
           if git ls-remote --tags origin refs/tags/$MAIN_VERSION | grep -q "$MAIN_VERSION"; then
             echo "BUILD_TAG_EXISTS=true" >> $GITHUB_OUTPUT
           else
@@ -57,9 +55,6 @@ jobs:
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_OUTPUT
           echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
 
-          echo "Full JAR Version: $FULL_VERSION"
-          echo "Build Number: $BUILD_NUMBER"
-
       - name: ☕ Set up JDK 8
         uses: actions/setup-java@v4
         with:
@@ -69,10 +64,8 @@ jobs:
 
       - name: ⚙️ Update plugin.yml to main version
         run: |
-          # replace a line like: version: undefined  or version: "..."
           if [ -f plugin.yml ]; then
             sed -E -i "s/^(version:\s*).*/\1${{ steps.set_vars.outputs.MAIN_VERSION }}/" plugin.yml || true
-            echo "Updated plugin.yml:" 
             sed -n '1,120p' plugin.yml || true
           else
             echo "plugin.yml not found, skipping" >&2
@@ -80,7 +73,6 @@ jobs:
 
       - name: 📦 Set pom version to full version and build
         run: |
-          # change project.version to the FULL_VERSION for this build
           mvn -q -DgenerateBackupPoms=false versions:set -DnewVersion=${{ steps.set_vars.outputs.FULL_VERSION }}
 
       - name: 🔧 Build with Maven (package using shade)
@@ -89,7 +81,6 @@ jobs:
 
       - name: 📝 Inject Main-Version and Build-Number into JAR manifest
         run: |
-          # find the produced jar (shade usually produces *-shaded.jar or artifactId-version.jar)
           JAR=$(ls target/*.jar 2>/dev/null | head -n 1 || true)
           if [ -z "$JAR" ]; then
             echo "No jar found in target/" >&2
@@ -99,11 +90,9 @@ jobs:
           echo "Main-Version: ${{ steps.set_vars.outputs.MAIN_VERSION }}" > manifest.tmp
           echo "Build-Number: ${{ steps.set_vars.outputs.BUILD_NUMBER }}" >> manifest.tmp
 
-          # Update the jar's manifest (jar tool will merge this manifest entries)
           jar ufm "$JAR" manifest.tmp || true
           rm -f manifest.tmp
 
-          # normalize final artifact name
           REPO_NAME=${{ github.event.repository.name }}
           mv "$JAR" "target/${REPO_NAME}.jar" || true
           ls -l target/${{ github.event.repository.name }}*.jar || true
@@ -111,50 +100,40 @@ jobs:
       - name: 📝 Extract [CL] changelog lines from commits
         id: changelog_extractor
         run: |
-          # get commits for this push
           BEFORE=${{ github.event.before }}
           AFTER=${{ github.event.after }}
 
           if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            # new branch or initial commit; take last 50 commits as fallback
             RANGE="HEAD~50..HEAD"
           else
             RANGE="$BEFORE..$AFTER"
           fi
 
-          # collect lines starting with [CL]
-          CHANGELOG_TMP=$(git log --pretty=format:%B $RANGE | sed -n 's/\r//g' | awk 'BEGIN{RS="\n"}{if ($0 ~ /^\[CL\]/) print substr($0, index($0,$0)+4)}')
-
-          # more robust extraction: find any occurrence of lines starting with [CL]
           CHANGELOG=$(git log --pretty=format:%B $RANGE | awk 'BEGIN{FS="\n"} {for(i=1;i<=NF;i++){ if ($i ~ /^\[CL\]/){ line = substr($i,5); gsub(/^\s+/,"",line); if (length(line)>0) print line }}}' | sed '/^\s*$/d' | awk '!seen[$0]++')
 
           if [ -z "$CHANGELOG" ]; then
             echo "NO_CHANGELOG=true" >> $GITHUB_OUTPUT
             echo "ESCAPED_CHANGELOG=" >> $GITHUB_OUTPUT
-            echo "No [CL] entries found."
           else
-            # escape newlines for GH Actions output
             ESCAPED=$(echo -e "$CHANGELOG" | sed 's/"/\\"/g' | awk 'BEGIN{ORS="\\n"} {print}')
             echo "NO_CHANGELOG=false" >> $GITHUB_OUTPUT
             echo "ESCAPED_CHANGELOG<<EOF" >> $GITHUB_OUTPUT
             echo "$ESCAPED" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
-            echo "Extracted changelog:" 
-            echo "$CHANGELOG"
           fi
 
       - name: 🆕 Create or update Release (tag = main version) and upload jar
-        uses: peter-evans/create-or-update-release@v3
-        id: release
+        uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.set_vars.outputs.MAIN_VERSION }}
-          release_name: "Release ${{ steps.set_vars.outputs.MAIN_VERSION }}"
+          name: "Release ${{ steps.set_vars.outputs.MAIN_VERSION }}"
           body: |
             ## Build ${{ steps.set_vars.outputs.BUILD_NUMBER }} — Version ${{ steps.set_vars.outputs.FULL_VERSION }}
 
             ${{ steps.changelog_extractor.outputs.ESCAPED_CHANGELOG }}
-          files: target/${{ github.event.repository.name }}.jar
+          files: |
+            target/${{ github.event.repository.name }}.jar
           draft: false
           prerelease: false
           append_body: true
