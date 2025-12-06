@@ -24,7 +24,7 @@ jobs:
       - name: ⚙️ Extract main version from pom.xml
         id: version_extractor
         run: |
-          MAIN_VERSION=$(xmllint --xpath "/*[local-name()='project']/*[local-name()='version']/text()" pom.xml 2>/dev/null || true)
+          MAIN_VERSION=$(grep -m1 -oP '(?<=<version>)[^<]+' pom.xml)
           if [ -z "$MAIN_VERSION" ]; then
             echo "Could not find <version> in pom.xml" >&2
             exit 1
