@@ -23,10 +23,9 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
+                            <Main-Version>${project.version}</Main-Version>
                             <!--suppress UnresolvedMavenProperty -->
-                            <Main-Version>${mainVersionProp}</Main-Version>
-                            <!--suppress UnresolvedMavenProperty -->
-                            <Build-Number>${buildNumberProp}</Build-Number>
+                            <Build-Number>${BUILD_NUMBER}</Build-Number>
                         </manifestEntries>
                     </archive>
                 </configuration>
