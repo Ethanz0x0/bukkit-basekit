@@ -1,6 +1,5 @@
-name: Maven Build and Release (Bukkit)
+name: Build & Release
 
-# Only run on pushes to main/master
 on:
   push:
     branches:
@@ -9,139 +8,132 @@ on:
 
 permissions:
   contents: write
-  actions: read
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: ⬇️ Checkout repository
+      # 1. Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: ⚙️ Extract main version from pom.xml
-        id: version_extractor
-        run: |
-          MAIN_VERSION=$(grep -m1 -oP '(?<=<version>)[^<]+' pom.xml)
-          if [ -z "$MAIN_VERSION" ]; then
-            echo "Could not find <version> in pom.xml" >&2
-            exit 1
-          fi
-          echo "MAIN_VERSION=$MAIN_VERSION" >> $GITHUB_OUTPUT
-
-          if git ls-remote --tags origin refs/tags/$MAIN_VERSION | grep -q "$MAIN_VERSION"; then
-            echo "BUILD_TAG_EXISTS=true" >> $GITHUB_OUTPUT
-          else
-            echo "BUILD_TAG_EXISTS=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: 🔢 Get Build Number
-        id: build_number_action
-        run: |
-          # Use GitHub run_number as build number
-          BUILD_NUMBER=${{ github.run_number }}
-          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
-
-      - name: 📝 Set versioning variables
-        id: set_vars
-        run: |
-          MAIN_VERSION=${{ steps.version_extractor.outputs.MAIN_VERSION }}
-          BUILD_NUMBER=$BUILD_NUMBER
-          FULL_VERSION="$MAIN_VERSION.$BUILD_NUMBER"
-
-          echo "MAIN_VERSION=$MAIN_VERSION" >> $GITHUB_OUTPUT
-          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_OUTPUT
-          echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
-
-      - name: ☕ Set up JDK 8
+      # 2. Setup JDK
+      - name: Set up JDK 8
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '8'
-          cache: maven
+          distribution: temurin
+          java-version: 8
 
-      - name: ⚙️ Update plugin.yml to main version
+      # 3. 读取主版本号（pom.xml 中的 <version>）
+      - name: Read main version from pom.xml
+        id: read_version
         run: |
-          if [ -f plugin.yml ]; then
-            sed -E -i "s/^(version:\s*).*/\1${{ steps.set_vars.outputs.MAIN_VERSION }}/" plugin.yml || true
-            sed -n '1,120p' plugin.yml || true
+          MAIN_VERSION=$(xmllint --xpath "string(//project/version)" pom.xml)
+          echo "main_version=$MAIN_VERSION" >> $GITHUB_OUTPUT
+
+      # 4. 获取构建号（根据主版本分组存储）
+      - name: Determine build number
+        id: build_number
+        run: |
+          MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
+
+          KEY="build-${MAIN_VERSION}"
+          # 从 GitHub Release 中尝试读取构建号
+          LAST_BUILD=$(gh release view "$MAIN_VERSION" --json assets --jq '.assets[].name' 2>/dev/null | grep -oP "(?<=${MAIN_VERSION}-)\d+(?=\.jar)" | sort -n | tail -1)
+
+          if [ -z "$LAST_BUILD" ]; then
+            BUILD_NUMBER=1
           else
-            echo "plugin.yml not found, skipping" >&2
+            BUILD_NUMBER=$((LAST_BUILD + 1))
           fi
 
-      - name: 📦 Set pom version to full version and build
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
+      # 5. 替换 plugin.yml 的 version 字段（使用主版本号）
+      - name: Rewrite plugin.yml version
         run: |
-          mvn -q -DgenerateBackupPoms=false versions:set -DnewVersion=${{ steps.set_vars.outputs.FULL_VERSION }}
+          MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
+          sed -i "s/version: .*/version: ${MAIN_VERSION}/" plugin.yml
 
-      - name: 🔧 Build with Maven (package using shade)
+      # 6. 将 BUILD_NUMBER 写入 Maven 使用的环境变量
+      - name: Set build number env
+        run: echo "BUILD_NUMBER=${{ steps.build_number.outputs.build_number }}" >> $GITHUB_ENV
+
+      # 7. Build jar（Shade）
+      - name: Build with Maven
+        run: mvn -B clean package -DskipTests
+
+      # 8. 重命名 artifact（BaseKit-主版本-构建号.jar）
+      - name: Rename artifact
+        id: rename
         run: |
-          mvn -q clean package
+          MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
+          BUILD_NUMBER=${{ steps.build_number.outputs.build_number }}
+          OUT="BaseKit-${MAIN_VERSION}-${BUILD_NUMBER}.jar"
 
-      - name: 📝 Inject Main-Version and Build-Number into JAR manifest
+          cp target/*-shaded.jar "$OUT"
+          echo "artifact=$OUT" >> $GITHUB_OUTPUT
+
+      # 9. 提取本次构建相关 commit 的 changelog（仅 [CL] 开头）
+      - name: Extract Changelog
+        id: changelog
         run: |
-          JAR=$(ls target/*.jar 2>/dev/null | head -n 1 || true)
-          if [ -z "$JAR" ]; then
-            echo "No jar found in target/" >&2
-            exit 1
-          fi
+          # 读取最新构建到当前的 commits
+          COMMITS=$(git log -n 20 --pretty=format:"%s")
 
-          echo "Main-Version: ${{ steps.set_vars.outputs.MAIN_VERSION }}" > manifest.tmp
-          echo "Build-Number: ${{ steps.set_vars.outputs.BUILD_NUMBER }}" >> manifest.tmp
+          echo "--- COMMITS ---"
+          echo "$COMMITS"
 
-          jar ufm "$JAR" manifest.tmp || true
-          rm -f manifest.tmp
+          # 提取 [CL] 内容（大小写不敏感）
+          CHANGELOG=""
+          while read -r line; do
+            if echo "$line" | grep -iq "^\[CL\]"; then
+              ITEM=$(echo "$line" | sed -E 's/^\[CL\]\s*//I')
+              CHANGELOG="${CHANGELOG}${ITEM}\n"
+            fi
+          done <<< "$COMMITS"
 
-          REPO_NAME=${{ github.event.repository.name }}
-          mv "$JAR" "target/${REPO_NAME}.jar" || true
-          ls -l target/${{ github.event.repository.name }}*.jar || true
+          echo -e "$CHANGELOG" > extracted_changelog.txt
 
-      - name: 📝 Extract [CL] changelog lines from commits
-        id: changelog_extractor
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat extracted_changelog.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # 10. 读取旧 Release 的 Changelog 并合并（去重）
+      - name: Merge Changelog
+        id: merge
         run: |
-          BEFORE=${{ github.event.before }}
-          AFTER=${{ github.event.after }}
+          MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
 
-          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            RANGE="HEAD~50..HEAD"
+          # 获取旧 changelog
+          gh release view "$MAIN_VERSION" --json body --jq '.body' > old_body.txt 2>/dev/null || true
+
+          echo "Old Release Body:"
+          cat old_body.txt || true
+
+          # 抽取旧 changelog（第一段）
+          awk '/^---/{flag=flag?0:1;next} flag' old_body.txt > old_changelog.txt || true
+
+          # 合并并去重
+          cat old_changelog.txt extracted_changelog.txt | sed '/^$/d' | sort -u > merged_changelog.txt
+
+          echo "---" > final_body.txt
+          cat merged_changelog.txt >> final_body.txt
+          echo "---" >> final_body.txt
+          echo "Content" >> final_body.txt
+
+      # 11. 创建或更新 Release
+      - name: Create or Update Release
+        run: |
+          MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
+          ARTIFACT=${{ steps.rename.outputs.artifact }}
+
+          if gh release view "$MAIN_VERSION" >/dev/null 2>&1; then
+            gh release upload "$MAIN_VERSION" "$ARTIFACT" --clobber
+            gh release edit "$MAIN_VERSION" --notes-file final_body.txt
           else
-            RANGE="$BEFORE..$AFTER"
+            gh release create "$MAIN_VERSION" "$ARTIFACT" --title "$MAIN_VERSION" --notes-file final_body.txt
           fi
-
-          CHANGELOG=$(git log --pretty=format:%B $RANGE | awk 'BEGIN{FS="\n"} {for(i=1;i<=NF;i++){ if ($i ~ /^\[CL\]/){ line = substr($i,5); gsub(/^\s+/,"",line); if (length(line)>0) print line }}}' | sed '/^\s*$/d' | awk '!seen[$0]++')
-
-          if [ -z "$CHANGELOG" ]; then
-            echo "NO_CHANGELOG=true" >> $GITHUB_OUTPUT
-            echo "ESCAPED_CHANGELOG=" >> $GITHUB_OUTPUT
-          else
-            ESCAPED=$(echo -e "$CHANGELOG" | sed 's/"/\\"/g' | awk 'BEGIN{ORS="\\n"} {print}')
-            echo "NO_CHANGELOG=false" >> $GITHUB_OUTPUT
-            echo "ESCAPED_CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-            echo "$ESCAPED" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          fi
-
-      - name: 🆕 Create or update Release (tag = main version) and upload jar
-        uses: softprops/action-gh-release@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ steps.set_vars.outputs.MAIN_VERSION }}
-          name: "Release ${{ steps.set_vars.outputs.MAIN_VERSION }}"
-          body: |
-            ## Build ${{ steps.set_vars.outputs.BUILD_NUMBER }} — Version ${{ steps.set_vars.outputs.FULL_VERSION }}
-
-            ${{ steps.changelog_extractor.outputs.ESCAPED_CHANGELOG }}
-          files: |
-            target/${{ github.event.repository.name }}.jar
-          draft: false
-          prerelease: false
-          append_body: true
-
-      - name: 🏷️ Update build-number tag (MAINVERSION-BUILDNUMBER)
-        run: |
-          TAG_NAME="${{ steps.set_vars.outputs.MAIN_VERSION }}-$BUILD_NUMBER"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -f "$TAG_NAME"
-          git push -f origin "$TAG_NAME"
