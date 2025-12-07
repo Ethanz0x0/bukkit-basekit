@@ -47,24 +47,21 @@ jobs:
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           sed -i "s/version: .*/version: ${MAIN_VERSION}/" src/main/resources/plugin.yml
 
-      # 6. Maven build
+      # 6. Maven build with internal build number in manifest
       - name: Build with Maven
-        run: mvn -B clean package -DskipTests \
-          -DbuildNumber=${{ steps.commit_sha.outputs.commit_sha }}
+        run: |
+          COMMIT_SHA=${{ steps.commit_sha.outputs.commit_sha }}
+          mvn -B clean package -DskipTests \
+            -DbuildNumber=$COMMIT_SHA
 
-      # 7. Rename shaded artifact for internal reference
-      - name: Rename artifact
+      # 7. Rename artifact for Release (固定文件名)
+      - name: Prepare release artifact
         id: rename
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-          COMMIT_SHA=${{ steps.commit_sha.outputs.commit_sha }}
-          # 内部文件名带 commit id 用于区分构建（可选）
-          INTERNAL_FILE="BaseKit-${MAIN_VERSION}-${COMMIT_SHA}.jar"
-          JAR=$(ls target/*-shaded.jar | head -n1)
-          cp "$JAR" "$INTERNAL_FILE"
-          echo "internal_artifact=$INTERNAL_FILE" >> $GITHUB_OUTPUT
-          # Release 上传文件名固定为 BaseKit-<主版本号>.jar
+          # Release 上传文件名固定
           RELEASE_FILE="BaseKit-${MAIN_VERSION}.jar"
+          JAR=$(ls target/*-shaded.jar | head -n1)
           cp "$JAR" "$RELEASE_FILE"
           echo "release_artifact=$RELEASE_FILE" >> $GITHUB_OUTPUT
 
@@ -106,7 +103,9 @@ jobs:
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           RELEASE_FILE=${{ steps.rename.outputs.release_artifact }}
           if gh release view "$MAIN_VERSION" >/dev/null 2>&1; then
+            # 覆盖上一次的 artifact
             gh release upload "$MAIN_VERSION" "$RELEASE_FILE" --clobber
+            # 更新 notes
             gh release edit "$MAIN_VERSION" --notes-file final_body.txt
           else
             gh release create "$MAIN_VERSION" "$RELEASE_FILE" --title "$MAIN_VERSION" --notes-file final_body.txt
