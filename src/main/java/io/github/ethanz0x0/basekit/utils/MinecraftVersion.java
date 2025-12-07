@@ -23,6 +23,9 @@ public enum MinecraftVersion {
     MINECRAFT_1_21_9(773, "1.21.9");
 
     public static MinecraftVersion getCurrentVersion() {
+        System.out.println(Bukkit.getBukkitVersion().split("-")[0]);
+        System.out.println(Bukkit.getBukkitVersion().split("-"));
+        System.out.println(Bukkit.getBukkitVersion());
         return getByVersionString(Bukkit.getBukkitVersion().split("-")[0]);
     }
 
