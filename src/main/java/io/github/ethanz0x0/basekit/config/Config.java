@@ -4,7 +4,6 @@ import io.github.ethanz0x0.basekit.BaseKit;
 import io.github.ethanz0x0.nucleus.config.ConfigurationException;
 import io.github.ethanz0x0.nucleus.config.FileConfiguration;
 import io.github.ethanz0x0.nucleus.config.adapters.YamlConfigurationAdapter;
-import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.io.InputStream;
@@ -34,7 +33,7 @@ public class Config {
         try {
             return new FileConfiguration(file, in, YamlConfigurationAdapter.class);
         } catch (ConfigurationException e) {
-            Bukkit.getLogger().warning("Failed to init config: " + file.getName());
+            plugin.getLogger().warning("Failed to init config: " + file.getName());
             throw new RuntimeException(e);
         }
     }
