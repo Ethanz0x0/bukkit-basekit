@@ -20,74 +20,63 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 2. Setup JDK
-      - name: Set up JDK 8
+      # 2. Setup JDK 8
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 8
 
-      # 3. 读取主版本号（pom.xml 中的 <version>）
+      # 3. Read main version from pom.xml
       - name: Read main version from pom.xml
         id: read_version
         run: |
           MAIN_VERSION=$(grep -oPm1 "(?<=<version>)[^<]+" pom.xml | head -n1)
           echo "main_version=$MAIN_VERSION" >> $GITHUB_OUTPUT
 
-      # 4. 获取构建号（根据主版本分组存储）
+      # 4. Determine build number
       - name: Determine build number
         id: build_number
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-
-          KEY="build-${MAIN_VERSION}"
-          # 从 GitHub Release 中尝试读取构建号
           LAST_BUILD=$(gh release view "$MAIN_VERSION" --json assets --jq '.assets[].name' 2>/dev/null | grep -oP "(?<=${MAIN_VERSION}-)\d+(?=\.jar)" | sort -n | tail -1)
-
           if [ -z "$LAST_BUILD" ]; then
             BUILD_NUMBER=1
           else
             BUILD_NUMBER=$((LAST_BUILD + 1))
           fi
-
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
 
-      # 5. 替换 plugin.yml 的 version 字段（使用主版本号）
+      # 5. Rewrite plugin.yml version
       - name: Rewrite plugin.yml version
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           sed -i "s/version: .*/version: ${MAIN_VERSION}/" src/main/resources/plugin.yml
 
-      # 6. 将 BUILD_NUMBER 写入 Maven 使用的环境变量
+      # 6. Set BUILD_NUMBER env
       - name: Set build number env
         run: echo "BUILD_NUMBER=${{ steps.build_number.outputs.build_number }}" >> $GITHUB_ENV
 
-      # 7. Build jar（Shade）
+      # 7. Maven build
       - name: Build with Maven
         run: mvn -B clean package -DskipTests
 
-      # 8. 重命名 artifact（BaseKit-主版本-构建号.jar）
+      # 8. Rename shaded artifact
       - name: Rename artifact
         id: rename
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           BUILD_NUMBER=${{ steps.build_number.outputs.build_number }}
           OUT="BaseKit-${MAIN_VERSION}-${BUILD_NUMBER}.jar"
-
-          cp target/*-shaded.jar "$OUT"
+          JAR=$(ls target/*-shaded.jar | head -n1)
+          cp "$JAR" "$OUT"
           echo "artifact=$OUT" >> $GITHUB_OUTPUT
 
-      # 9. 提取本次构建相关 commit 的 changelog（仅 [CL] 开头）
+      # 9. Extract Changelog
       - name: Extract Changelog
         id: changelog
         run: |
-          # 读取最新构建到当前的 commits
           COMMITS=$(git log -n 20 --pretty=format:"%s")
-
-          echo "--- COMMITS ---"
-          echo "$COMMITS"
-
-          # 提取 [CL] 内容（大小写不敏感）
           CHANGELOG=""
           while read -r line; do
             if echo "$line" | grep -iq "^\[CL\]"; then
@@ -95,42 +84,30 @@ jobs:
               CHANGELOG="${CHANGELOG}${ITEM}\n"
             fi
           done <<< "$COMMITS"
-
           echo -e "$CHANGELOG" > extracted_changelog.txt
-
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           cat extracted_changelog.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      # 10. 读取旧 Release 的 Changelog 并合并（去重）
+      # 10. Merge Changelog
       - name: Merge Changelog
-        id: merge
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-
-          # 获取旧 changelog
           gh release view "$MAIN_VERSION" --json body --jq '.body' > old_body.txt 2>/dev/null || true
-
-          echo "Old Release Body:"
-          cat old_body.txt || true
-
-          # 抽取旧 changelog（第一段）
           awk '/^---/{flag=flag?0:1;next} flag' old_body.txt > old_changelog.txt || true
-
-          # 合并并去重
           cat old_changelog.txt extracted_changelog.txt | sed '/^$/d' | sort -u > merged_changelog.txt
-
           echo "---" > final_body.txt
           cat merged_changelog.txt >> final_body.txt
           echo "---" >> final_body.txt
           echo "Content" >> final_body.txt
 
-      # 11. 创建或更新 Release
+      # 11. Create or Update Release (带 GH_TOKEN)
       - name: Create or Update Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           ARTIFACT=${{ steps.rename.outputs.artifact }}
-
           if gh release view "$MAIN_VERSION" >/dev/null 2>&1; then
             gh release upload "$MAIN_VERSION" "$ARTIFACT" --clobber
             gh release edit "$MAIN_VERSION" --notes-file final_body.txt
