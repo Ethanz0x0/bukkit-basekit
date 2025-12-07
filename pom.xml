@@ -28,6 +28,9 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <finalName>${project.artifactId}-${project.version}-shaded</finalName>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
