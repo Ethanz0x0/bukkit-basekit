@@ -31,7 +31,7 @@ jobs:
       - name: Read main version from pom.xml
         id: read_version
         run: |
-          MAIN_VERSION=$(xmllint --xpath "string(//project/version)" pom.xml)
+          MAIN_VERSION=$(grep -oPm1 "(?<=<version>)[^<]+" pom.xml | head -n1)
           echo "main_version=$MAIN_VERSION" >> $GITHUB_OUTPUT
 
       # 4. 获取构建号（根据主版本分组存储）
