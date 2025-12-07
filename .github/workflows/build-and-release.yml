@@ -51,17 +51,15 @@ jobs:
       - name: Build with Maven
         run: |
           COMMIT_SHA=${{ steps.commit_sha.outputs.commit_sha }}
-          mvn -B clean package -DskipTests \
-            -DbuildNumber=$COMMIT_SHA
+          mvn -B clean package -DskipTests -DbuildNumber=$COMMIT_SHA
 
-      # 7. Rename artifact for Release (固定文件名)
+      # 7. Prepare release artifact (固定文件名)
       - name: Prepare release artifact
         id: rename
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-          # Release 上传文件名固定
-          RELEASE_FILE="BaseKit-${MAIN_VERSION}.jar"
           JAR=$(ls target/*-shaded.jar | head -n1)
+          RELEASE_FILE="BaseKit-${MAIN_VERSION}.jar"
           cp "$JAR" "$RELEASE_FILE"
           echo "release_artifact=$RELEASE_FILE" >> $GITHUB_OUTPUT
 
@@ -71,7 +69,7 @@ jobs:
         run: |
           COMMITS=$(git log -n 20 --pretty=format:"%s")
           CHANGELOG=""
-          while read -r line; do
+          while IFS= read -r line; do
             if echo "$line" | grep -iq "^\[CL\]"; then
               ITEM=$(echo "$line" | sed -E 's/^\[CL\]\s*//I')
               CHANGELOG="${CHANGELOG}${ITEM}\n"
@@ -83,12 +81,14 @@ jobs:
       - name: Merge Changelog and format
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
+          # 获取旧的 Release notes（如果有）
           gh release view "$MAIN_VERSION" --json body --jq '.body' > old_body.txt 2>/dev/null || true
           MERGED=$(cat old_body.txt extracted_changelog.txt | sed '/^$/d' | sort -u)
+          # 写入 final_body.txt，带大标题和列表
           {
             echo "# Changelog"
             echo ""
-            while read -r line; do
+            while IFS= read -r line; do
               if [ -n "$line" ]; then
                 echo "- $line"
               fi
