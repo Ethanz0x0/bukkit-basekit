@@ -28,7 +28,7 @@ public class UpdateCheckerScheduler implements Runnable {
                        "https://github.com/Ethanz0x0/bukkit-basekit/releases/");
                NEED_UPDATE = true;
            }
-            plugin.getLogger().warning("-------------------------------------------------------");
+            plugin.getLogger().info("-------------------------------------------------------");
         });
     }
 }

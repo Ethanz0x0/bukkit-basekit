@@ -8,24 +8,27 @@ public enum MinecraftVersion {
     MINECRAFT_1_18_2(758, "1.18.2"),
     MINECRAFT_1_19(759, "1.19"),
     MINECRAFT_1_19_1(760, "1.19.1"),
+    MINECRAFT_1_19_2(760, "1.19.2"),
     MINECRAFT_1_19_3(761, "1.19.3"),
     MINECRAFT_1_19_4(762, "1.19.4"),
     MINECRAFT_1_20(763, "1.20"),
+    MINECRAFT_1_20_1(763, "1.20.1"),
     MINECRAFT_1_20_2(764, "1.20.2"),
     MINECRAFT_1_20_3(765, "1.20.3"),
+    MINECRAFT_1_20_4(765, "1.20.4"),
     MINECRAFT_1_20_5(766, "1.20.5"),
     MINECRAFT_1_21(767, "1.21"),
+    MINECRAFT_1_21_1(767, "1.21.1"),
     MINECRAFT_1_21_2(768, "1.21.2"),
+    MINECRAFT_1_21_3(768, "1.21.3"),
     MINECRAFT_1_21_4(769, "1.21.4"),
     MINECRAFT_1_21_5(770, "1.21.5"),
     MINECRAFT_1_21_6(771, "1.21.6"),
     MINECRAFT_1_21_7(772, "1.21.7"),
+    MINECRAFT_1_21_8(772, "1.21.8"),
     MINECRAFT_1_21_9(773, "1.21.9");
 
     public static MinecraftVersion getCurrentVersion() {
-        System.out.println(Bukkit.getBukkitVersion().split("-")[0]);
-        System.out.println(Bukkit.getBukkitVersion().split("-"));
-        System.out.println(Bukkit.getBukkitVersion());
         return getByVersionString(Bukkit.getBukkitVersion().split("-")[0]);
     }
 
