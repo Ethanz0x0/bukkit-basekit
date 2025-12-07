@@ -71,12 +71,12 @@ jobs:
           AFTER_SHA=${{ github.event.after }}
 
           > extracted_changelog.txt
-          
+
           if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
             echo "Detected initial push or force push — using last 10 commits"
-            COMMITS=$(git log -n 10 --pretty=format:"%s")
+            COMMITS=$(git log -n 10 --pretty=format:"%B")
           else
-            COMMITS=$(git log $BEFORE_SHA..$AFTER_SHA --pretty=format:"%s")
+            COMMITS=$(git log $BEFORE_SHA..$AFTER_SHA --pretty=format:"%B")
           fi
 
           while IFS= read -r line; do
