@@ -34,26 +34,12 @@ jobs:
           MAIN_VERSION=$(grep -oPm1 "(?<=<version>)[^<]+" pom.xml | head -n1)
           echo "main_version=$MAIN_VERSION" >> $GITHUB_OUTPUT
 
-      # 4. Determine build number (修复重复问题)
-      - name: Determine build number
-        id: build_number
+      # 4. Get short commit SHA as internal build number
+      - name: Get short commit SHA
+        id: commit_sha
         run: |
-          MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-
-          # 获取 Release 中已有 artifact 构建号最大值
-          LAST_BUILD=$(gh release view "$MAIN_VERSION" --json assets --jq '.assets[].name' 2>/dev/null \
-            | grep -oP "${MAIN_VERSION}-\d+\.jar" \
-            | grep -oP "\d+" \
-            | sort -n \
-            | tail -1)
-
-          if [ -z "$LAST_BUILD" ]; then
-            BUILD_NUMBER=1
-          else
-            BUILD_NUMBER=$((LAST_BUILD + 1))
-          fi
-
-          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
 
       # 5. Rewrite plugin.yml version
       - name: Rewrite plugin.yml version
@@ -61,26 +47,28 @@ jobs:
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           sed -i "s/version: .*/version: ${MAIN_VERSION}/" src/main/resources/plugin.yml
 
-      # 6. Set BUILD_NUMBER env
-      - name: Set build number env
-        run: echo "BUILD_NUMBER=${{ steps.build_number.outputs.build_number }}" >> $GITHUB_ENV
-
-      # 7. Maven build
+      # 6. Maven build
       - name: Build with Maven
-        run: mvn -B clean package -DskipTests
+        run: mvn -B clean package -DskipTests \
+          -DbuildNumber=${{ steps.commit_sha.outputs.commit_sha }}
 
-      # 8. Rename shaded artifact
+      # 7. Rename shaded artifact for internal reference
       - name: Rename artifact
         id: rename
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-          BUILD_NUMBER=${{ steps.build_number.outputs.build_number }}
-          OUT="BaseKit-${MAIN_VERSION}-${BUILD_NUMBER}.jar"
+          COMMIT_SHA=${{ steps.commit_sha.outputs.commit_sha }}
+          # 内部文件名带 commit id 用于区分构建（可选）
+          INTERNAL_FILE="BaseKit-${MAIN_VERSION}-${COMMIT_SHA}.jar"
           JAR=$(ls target/*-shaded.jar | head -n1)
-          cp "$JAR" "$OUT"
-          echo "artifact=$OUT" >> $GITHUB_OUTPUT
+          cp "$JAR" "$INTERNAL_FILE"
+          echo "internal_artifact=$INTERNAL_FILE" >> $GITHUB_OUTPUT
+          # Release 上传文件名固定为 BaseKit-<主版本号>.jar
+          RELEASE_FILE="BaseKit-${MAIN_VERSION}.jar"
+          cp "$JAR" "$RELEASE_FILE"
+          echo "release_artifact=$RELEASE_FILE" >> $GITHUB_OUTPUT
 
-      # 9. Extract Changelog from recent commits
+      # 8. Extract Changelog from recent commits
       - name: Extract Changelog
         id: changelog
         run: |
@@ -94,21 +82,12 @@ jobs:
           done <<< "$COMMITS"
           echo -e "$CHANGELOG" > extracted_changelog.txt
 
-      # 10. Merge Changelog and format
+      # 9. Merge Changelog and format
       - name: Merge Changelog and format
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-
-          # 获取旧的 Release notes（如果有）
           gh release view "$MAIN_VERSION" --json body --jq '.body' > old_body.txt 2>/dev/null || true
-
-          # 提取旧 changelog（跳过大标题行）
-          OLD_CHANGELOG=$(awk 'NR>1' old_body.txt || true)
-
-          # 合并新旧 changelog 去重
           MERGED=$(cat old_body.txt extracted_changelog.txt | sed '/^$/d' | sort -u)
-
-          # 写入 final_body.txt，带大标题和列表
           {
             echo "# Changelog"
             echo ""
@@ -119,20 +98,15 @@ jobs:
             done <<< "$MERGED"
           } > final_body.txt
 
-      # 11. Create or Update Release
+      # 10. Create or Update Release
       - name: Create or Update Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-          ARTIFACT=${{ steps.rename.outputs.artifact }}
-
+          RELEASE_FILE=${{ steps.rename.outputs.release_artifact }}
           if gh release view "$MAIN_VERSION" >/dev/null 2>&1; then
-            # release 已存在，只上传新的 artifact
-            gh release upload "$MAIN_VERSION" "$ARTIFACT"
-            # 更新 notes（累积 changelog）
+            gh release upload "$MAIN_VERSION" "$RELEASE_FILE" --clobber
             gh release edit "$MAIN_VERSION" --notes-file final_body.txt
           else
-            # release 不存在，新建
-            gh release create "$MAIN_VERSION" "$ARTIFACT" --title "$MAIN_VERSION" --notes-file final_body.txt
-          fi
+            gh release create "$MAIN_VERSION" "$RELEASE_FILE" --title "$MAIN_VERSION" --notes-file final_body.txt
