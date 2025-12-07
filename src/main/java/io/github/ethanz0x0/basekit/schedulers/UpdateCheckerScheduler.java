@@ -16,7 +16,7 @@ public class UpdateCheckerScheduler implements Runnable {
         if (!Config.getMainConfig().getBoolean("update-checker")) {
             return;
         }
-        plugin.getLogger().warning("-------------------------------------------------------");
+        plugin.getLogger().info("-------------------------------------------------------");
         plugin.getLogger().info("Checking for version updates...");
         UpdateChecker.check().thenAccept(latest -> {
            if (latest) {
@@ -24,7 +24,7 @@ public class UpdateCheckerScheduler implements Runnable {
                        + VersionHelper.getFullVersion() + ")");
                NEED_UPDATE = false;
            } else {
-               plugin.getLogger().warning("There is a newer version of BaseKit, you can download it at " +
+               plugin.getLogger().info("There is a newer version of BaseKit, you can download it at " +
                        "https://github.com/Ethanz0x0/bukkit-basekit/releases/");
                NEED_UPDATE = true;
            }
