@@ -47,11 +47,11 @@ jobs:
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           sed -i "s/^version: .*/version: ${MAIN_VERSION}/" src/main/resources/plugin.yml
 
-      # 6. Build with Maven
+      # 6. Build with Maven (internal build number passed as property)
       - name: Build with Maven
         run: |
-          BUILD_NUMBER=${{ steps.commit_sha.outputs.commit_sha }}
-          mvn -B clean package -DskipTests -DbuildNumber=$BUILD_NUMBER
+          COMMIT_SHA=${{ steps.commit_sha.outputs.commit_sha }}
+          mvn -B clean package -DskipTests -DbuildNumber=$COMMIT_SHA
 
       # 7. Prepare Release artifact
       - name: Prepare Release artifact
