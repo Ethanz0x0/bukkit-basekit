@@ -67,7 +67,10 @@ jobs:
       - name: Extract Changelog
         id: extract_changelog
         run: |
-          COMMITS=$(git log -n 20 --pretty=format:"%s")
+          BEFORE_SHA=${{ github.event.before }}
+          AFTER_SHA=${{ github.event.after }}
+
+          COMMITS=$(git log $BEFORE_SHA..$AFTER_SHA --pretty=format:"%s")
           > extracted_changelog.txt
           while IFS= read -r line; do
             if echo "$line" | grep -iq "^\[CL\]"; then
