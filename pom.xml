@@ -22,17 +22,16 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.4</version>
 
-                <configuration>
-                    <finalName>${project.artifactId}-${project.version}-shaded</finalName>
-                </configuration>
-
                 <executions>
                     <execution>
-                        <id>shade</id>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>shaded</shadedClassifierName>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
