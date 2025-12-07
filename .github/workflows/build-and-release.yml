@@ -56,7 +56,7 @@ jobs:
       - name: Rewrite plugin.yml version
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-          sed -i "s/version: .*/version: ${MAIN_VERSION}/" plugin.yml
+          sed -i "s/version: .*/version: ${MAIN_VERSION}/" src/main/resources/plugin.yml
 
       # 6. 将 BUILD_NUMBER 写入 Maven 使用的环境变量
       - name: Set build number env
