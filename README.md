@@ -5,7 +5,7 @@
 It provides a variety of core features to help server admins and players manage the server and enhance gameplay without
 installing multiple plugins.
 
-### Key Features
+### Features
 - Convenient commands to manage players and server
 - Useful tools and shortcuts
 - Customizable configuration for personalized server setup
