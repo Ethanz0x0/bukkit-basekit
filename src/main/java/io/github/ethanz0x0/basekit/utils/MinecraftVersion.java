@@ -1,5 +1,7 @@
 package io.github.ethanz0x0.basekit.utils;
 
+import org.bukkit.Bukkit;
+
 public enum MinecraftVersion {
 
     MINECRAFT_1_18(757, "1.18"),
@@ -19,6 +21,28 @@ public enum MinecraftVersion {
     MINECRAFT_1_21_6(771, "1.21.6"),
     MINECRAFT_1_21_7(772, "1.21.7"),
     MINECRAFT_1_21_9(773, "1.21.9");
+
+    public static MinecraftVersion getCurrentVersion() {
+        return getByVersionString(Bukkit.getBukkitVersion().split("-")[0]);
+    }
+
+    public static MinecraftVersion getByProtocol(int protocol) {
+        for (MinecraftVersion version : values()) {
+            if (version.getProtocolVersion() == protocol) {
+                return version;
+            }
+        }
+        return null;
+    }
+
+    public static MinecraftVersion getByVersionString(String versionName) {
+        for (MinecraftVersion version : values()) {
+            if (version.getMinecraftVersion().equalsIgnoreCase(versionName)) {
+                return version;
+            }
+        }
+        return null;
+    }
 
     private final int protocolVersion;
     private final String minecraftVersion;
@@ -42,19 +66,5 @@ public enum MinecraftVersion {
 
     public boolean isBefore(int protocol) {
         return this.protocolVersion < protocol;
-    }
-
-    public static MinecraftVersion getByProtocol(int protocol) {
-        for (MinecraftVersion version : values()) {
-            if (version.getProtocolVersion() == protocol) {
-                return version;
-            }
-        }
-        return null;
-    }
-
-    public static String getVersionStringByProtocol(int protocol) {
-        MinecraftVersion version = getByProtocol(protocol);
-        return version != null ? version.getMinecraftVersion() : "Unknown";
     }
 }

@@ -53,7 +53,22 @@ jobs:
           COMMIT_SHA=${{ steps.commit_sha.outputs.commit_sha }}
           mvn -B clean package -DskipTests -DbuildNumber=$COMMIT_SHA
 
-      # 7. Prepare Release artifact
+      # 7. Update MANIFEST.MF with Main-Version and Build-Number
+      - name: Update MANIFEST.MF
+        run: |
+          MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
+          BUILD_NUMBER=${{ steps.commit_sha.outputs.commit_sha }}
+          JAR_FILE=$(ls target/*-shaded.jar | head -n1)
+          TMP_DIR=$(mktemp -d)
+          unzip -q "$JAR_FILE" -d "$TMP_DIR"
+          MANIFEST="$TMP_DIR/META-INF/MANIFEST.MF"
+          echo "Main-Version: $MAIN_VERSION" >> "$MANIFEST"
+          echo "Build-Number: $BUILD_NUMBER" >> "$MANIFEST"
+          cd "$TMP_DIR"
+          zip -qr "$GITHUB_WORKSPACE/$JAR_FILE" . 
+          cd "$GITHUB_WORKSPACE"
+
+      # 8. Prepare Release artifact
       - name: Prepare Release artifact
         id: prepare_artifact
         run: |
@@ -63,7 +78,7 @@ jobs:
           cp "$SHADOW_JAR" "$RELEASE_FILE"
           echo "release_artifact=$RELEASE_FILE" >> $GITHUB_OUTPUT
 
-      # 8. Extract Changelog from recent commits
+      # 9. Extract Changelog from recent commits
       - name: Extract Changelog
         id: extract_changelog
         run: |
@@ -80,13 +95,13 @@ jobs:
           fi
 
           while IFS= read -r line; do
-            if echo "$line" | grep -iq "^\[CL\]"; then
-              ITEM=$(echo "$line" | sed -E 's/^\[CL\]\s*//I')
+            if echo "$line" | grep -iq "^$begin:math:display$CL$end:math:display$"; then
+              ITEM=$(echo "$line" | sed -E 's/^$begin:math:display$CL$end:math:display$\s*//I')
               printf "%s\n" "$ITEM" >> extracted_changelog.txt
             fi
           done <<< "$COMMITS"
 
-      # 9. Merge Changelog and format
+      # 10. Merge Changelog and format
       - name: Merge Changelog
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
@@ -101,7 +116,7 @@ jobs:
             fi
           done <<< "$MERGED"
 
-      # 10. Create or Update Release
+      # 11. Create or Update Release
       - name: Create or Update Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -20,11 +20,9 @@ public class BaseKit extends JavaPlugin {
     public void onEnable() {
         instance = this;
         getLogger().info("-------------------- BaseKit --------------------");
-        getLogger().info("Minecraft version: ");
+        getLogger().info("Minecraft version: " + Bukkit.getBukkitVersion());
         StartupInfo.checkAndCorrect();
         PlaceholderAPIHook.checkAndHook();
-        System.out.println(Bukkit.getVersion());
-        System.out.println(Bukkit.getBukkitVersion());
         if (StartupInfo.isFirstStart()) {
             getLogger().info("-------------------------------------------------------");
             getLogger().info("It seems that you are launching the current " +
