@@ -27,11 +27,11 @@ jobs:
           distribution: temurin
           java-version: 8
 
-      # 3. Read main version from pom.xml
+      # 3. Read main version from pom.xml (stable, using Maven)
       - name: Read main version
         id: read_version
         run: |
-          MAIN_VERSION=$(grep -oPm1 "(?<=<version>)[^<]+" pom.xml | head -n1)
+          MAIN_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "main_version=$MAIN_VERSION" >> $GITHUB_OUTPUT
 
       # 4. Get short commit SHA as internal build number
@@ -92,7 +92,7 @@ jobs:
             fi
           done <<< "$MERGED"
 
-      # 10. Create or update Release
+      # 10. Create or Update Release
       - name: Create or Update Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
