@@ -27,7 +27,7 @@ jobs:
           distribution: temurin
           java-version: 8
 
-      # 3. Read main version from pom.xml (stable, using Maven)
+      # 3. Read main version from pom.xml
       - name: Read main version
         id: read_version
         run: |
@@ -80,7 +80,6 @@ jobs:
       - name: Merge Changelog
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-          # 获取旧的 release notes
           gh release view "$MAIN_VERSION" --json body --jq '.body' > old_body.txt 2>/dev/null || true
           MERGED=$(cat old_body.txt extracted_changelog.txt | sed '/^$/d' | sort -u)
           > final_body.txt
@@ -104,3 +103,4 @@ jobs:
             gh release edit "$MAIN_VERSION" --notes-file final_body.txt
           else
             gh release create "$MAIN_VERSION" "$RELEASE_FILE" --title "$MAIN_VERSION" --notes-file final_body.txt
+          fi
