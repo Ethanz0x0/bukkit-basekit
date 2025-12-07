@@ -20,12 +20,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 2. Setup JDK 8
+      # 2. Setup JDK 17
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 8
+          java-version: 17
 
       # 3. Read main version from pom.xml
       - name: Read main version
@@ -45,7 +45,7 @@ jobs:
       - name: Rewrite plugin.yml version
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-          sed -i "s/version: .*/version: ${MAIN_VERSION}/" src/main/resources/plugin.yml
+          sed -i "s/^version: .*/version: ${MAIN_VERSION}/" src/main/resources/plugin.yml
 
       # 6. Build with Maven (internal build number passed as property)
       - name: Build with Maven
