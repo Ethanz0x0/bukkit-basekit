@@ -1,0 +1,5 @@
+#---+----------------------------------------------------------------------------------------------------+---#
+#                                          BaseKit - Global Message                                          #
+#---+----------------------------------------------------------------------------------------------------+---#
+prefix: "&8[&6BaseKit&8] &r"
+update-checker: "&eThere is a newer version of BaseKit, you can download it at &ahttps://github.com/Ethanz0x0/bukkit-basekit/releases/"

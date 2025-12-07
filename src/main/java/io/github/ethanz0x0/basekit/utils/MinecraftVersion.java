@@ -60,11 +60,11 @@ public enum MinecraftVersion {
         return minecraftVersion;
     }
 
-    public boolean isAfter(int protocol) {
-        return this.protocolVersion > protocol;
+    public boolean isAfterOrCurrent(MinecraftVersion version) {
+        return this.protocolVersion > version.protocolVersion;
     }
 
-    public boolean isBefore(int protocol) {
-        return this.protocolVersion < protocol;
+    public boolean isBeforeOrCurrent(MinecraftVersion version) {
+        return this.protocolVersion < version.protocolVersion;
     }
 }

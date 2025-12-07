@@ -1,6 +1,7 @@
 package io.github.ethanz0x0.basekit.config;
 
 import com.cryptomorin.xseries.XSound;
+import io.github.ethanz0x0.basekit.utils.MinecraftVersion;
 import io.github.ethanz0x0.basekit.utils.PlaceholderAPIHook;
 import io.github.ethanz0x0.basekit.utils.sound.SoundData;
 import io.github.ethanz0x0.nucleus.object.format.Formatter;
@@ -10,19 +11,26 @@ import org.bukkit.OfflinePlayer;
 
 public enum Module {
 
-    PLAYER_JOIN("player-join"),
-    PLAYER_QUIT("player-quit"),
-    DISABLED_COMMANDS("disabled-commands"),
-    WELCOME_MESSAGE("welcome-message");
+    PLAYER_JOIN("player-join", MinecraftVersion.MINECRAFT_1_18),
+    PLAYER_QUIT("player-quit", MinecraftVersion.MINECRAFT_1_18),
+    DISABLED_COMMANDS("disabled-commands", MinecraftVersion.MINECRAFT_1_18),
+    WELCOME_MESSAGE("welcome-message", MinecraftVersion.MINECRAFT_1_18);
 
     private final String module;
+    private final MinecraftVersion versionSupportAbove;
 
-    Module(String module) {
+    Module(String module, MinecraftVersion versionSupportAbove) {
         this.module = module;
+        this.versionSupportAbove = versionSupportAbove;
+    }
+
+    public MinecraftVersion getVersionSupportAbove() {
+        return versionSupportAbove;
     }
 
     public boolean isEnabled() {
-        return Config.getMainConfig().getBoolean(module + ".enabled");
+        return MinecraftVersion.getCurrentVersion().isAfterOrCurrent(versionSupportAbove) &&
+                Config.getMainConfig().getBoolean(module + ".enabled");
     }
 
     public void ifEnabled(Runnable run) {

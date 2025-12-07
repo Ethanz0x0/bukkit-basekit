@@ -1,7 +1,9 @@
 package io.github.ethanz0x0.basekit.listeners;
 
 import io.github.ethanz0x0.basekit.config.BuiltinPlaceholders;
+import io.github.ethanz0x0.basekit.config.Messages;
 import io.github.ethanz0x0.basekit.config.Module;
+import io.github.ethanz0x0.basekit.schedulers.UpdateCheckerScheduler;
 import io.github.ethanz0x0.basekit.utils.Broadcaster;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,6 +20,9 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        if (UpdateCheckerScheduler.NEED_UPDATE && player.hasPermission("basekit.update-checker")) {
+            player.sendMessage(Messages.getPrefixedMessage("update-checker"));
+        }
         Module.PLAYER_JOIN.ifEnabled(() -> {
             event.setJoinMessage(null);
             Broadcaster.broadcastMessage(

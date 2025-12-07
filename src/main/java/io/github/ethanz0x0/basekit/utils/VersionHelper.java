@@ -13,7 +13,7 @@ public class VersionHelper {
                 .getResourceAsStream("META-INF/MANIFEST.MF")) {
 
             if (input == null) {
-                return "";
+                return null;
             }
 
             Manifest manifest = new Manifest(input);
@@ -21,16 +21,24 @@ public class VersionHelper {
             return attr.getValue(name);
 
         } catch (Exception e) {
-            return "";
+            return null;
         }
     }
 
     public static String getMainVersion() {
-        return getStringAttribute("Main-Version");
+        String mainVersion = getStringAttribute("Main-Version");
+        if (mainVersion == null || mainVersion.equalsIgnoreCase("null")) {
+            return "unknown";
+        }
+        return mainVersion;
     }
 
     public static String getBuildNumber() {
-        return getStringAttribute("Build-Number");
+        String buildNumber = getStringAttribute("Build-Number");
+        if (buildNumber == null || buildNumber.equalsIgnoreCase("null")) {
+            return "unknown";
+        }
+        return buildNumber;
     }
 
     public static String getFullVersion() {
