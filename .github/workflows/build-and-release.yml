@@ -14,28 +14,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout
-      - name: Checkout repository
+      # 1. Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       # 2. Setup JDK 8
-      - name: Set up JDK
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 8
 
       # 3. Read main version from pom.xml
-      - name: Read main version from pom.xml
+      - name: Read main version
         id: read_version
         run: |
           MAIN_VERSION=$(grep -oPm1 "(?<=<version>)[^<]+" pom.xml | head -n1)
           echo "main_version=$MAIN_VERSION" >> $GITHUB_OUTPUT
 
       # 4. Get short commit SHA as internal build number
-      - name: Get short commit SHA
+      - name: Get commit SHA
         id: commit_sha
         run: |
           COMMIT_SHA=$(git rev-parse --short HEAD)
@@ -47,65 +47,60 @@ jobs:
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           sed -i "s/version: .*/version: ${MAIN_VERSION}/" src/main/resources/plugin.yml
 
-      # 6. Maven build with internal build number in manifest
+      # 6. Build with Maven (internal build number passed as property)
       - name: Build with Maven
         run: |
           COMMIT_SHA=${{ steps.commit_sha.outputs.commit_sha }}
           mvn -B clean package -DskipTests -DbuildNumber=$COMMIT_SHA
 
-      # 7. Prepare release artifact (固定文件名)
-      - name: Prepare release artifact
-        id: rename
+      # 7. Prepare Release artifact
+      - name: Prepare Release artifact
+        id: prepare_artifact
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-          JAR=$(ls target/*-shaded.jar | head -n1)
+          SHADOW_JAR=$(ls target/*-shaded.jar | head -n1)
           RELEASE_FILE="BaseKit-${MAIN_VERSION}.jar"
-          cp "$JAR" "$RELEASE_FILE"
+          cp "$SHADOW_JAR" "$RELEASE_FILE"
           echo "release_artifact=$RELEASE_FILE" >> $GITHUB_OUTPUT
 
       # 8. Extract Changelog from recent commits
       - name: Extract Changelog
-        id: changelog
+        id: extract_changelog
         run: |
           COMMITS=$(git log -n 20 --pretty=format:"%s")
-          CHANGELOG=""
+          > extracted_changelog.txt
           while IFS= read -r line; do
             if echo "$line" | grep -iq "^\[CL\]"; then
               ITEM=$(echo "$line" | sed -E 's/^\[CL\]\s*//I')
-              CHANGELOG="${CHANGELOG}${ITEM}\n"
+              printf "%s\n" "$ITEM" >> extracted_changelog.txt
             fi
           done <<< "$COMMITS"
-          echo -e "$CHANGELOG" > extracted_changelog.txt
 
       # 9. Merge Changelog and format
-      - name: Merge Changelog and format
+      - name: Merge Changelog
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-          # 获取旧的 Release notes（如果有）
+          # 获取旧的 release notes
           gh release view "$MAIN_VERSION" --json body --jq '.body' > old_body.txt 2>/dev/null || true
           MERGED=$(cat old_body.txt extracted_changelog.txt | sed '/^$/d' | sort -u)
-          # 写入 final_body.txt，带大标题和列表
-          {
-            echo "# Changelog"
-            echo ""
-            while IFS= read -r line; do
-              if [ -n "$line" ]; then
-                echo "- $line"
-              fi
-            done <<< "$MERGED"
-          } > final_body.txt
+          > final_body.txt
+          echo "# Changelog" >> final_body.txt
+          echo "" >> final_body.txt
+          while IFS= read -r line; do
+            if [ -n "$line" ]; then
+              echo "- $line" >> final_body.txt
+            fi
+          done <<< "$MERGED"
 
-      # 10. Create or Update Release
+      # 10. Create or update Release
       - name: Create or Update Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-          RELEASE_FILE=${{ steps.rename.outputs.release_artifact }}
+          RELEASE_FILE=${{ steps.prepare_artifact.outputs.release_artifact }}
           if gh release view "$MAIN_VERSION" >/dev/null 2>&1; then
-            # 覆盖上一次的 artifact
             gh release upload "$MAIN_VERSION" "$RELEASE_FILE" --clobber
-            # 更新 notes
             gh release edit "$MAIN_VERSION" --notes-file final_body.txt
           else
             gh release create "$MAIN_VERSION" "$RELEASE_FILE" --title "$MAIN_VERSION" --notes-file final_body.txt
