@@ -34,17 +34,25 @@ jobs:
           MAIN_VERSION=$(grep -oPm1 "(?<=<version>)[^<]+" pom.xml | head -n1)
           echo "main_version=$MAIN_VERSION" >> $GITHUB_OUTPUT
 
-      # 4. Determine build number
+      # 4. Determine build number (修复重复问题)
       - name: Determine build number
         id: build_number
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-          LAST_BUILD=$(gh release view "$MAIN_VERSION" --json assets --jq '.assets[].name' 2>/dev/null | grep -oP "(?<=${MAIN_VERSION}-)\d+(?=\.jar)" | sort -n | tail -1)
+
+          # 获取 Release 中已有 artifact 构建号最大值
+          LAST_BUILD=$(gh release view "$MAIN_VERSION" --json assets --jq '.assets[].name' 2>/dev/null \
+            | grep -oP "${MAIN_VERSION}-\d+\.jar" \
+            | grep -oP "\d+" \
+            | sort -n \
+            | tail -1)
+
           if [ -z "$LAST_BUILD" ]; then
             BUILD_NUMBER=1
           else
             BUILD_NUMBER=$((LAST_BUILD + 1))
           fi
+
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
 
       # 5. Rewrite plugin.yml version
