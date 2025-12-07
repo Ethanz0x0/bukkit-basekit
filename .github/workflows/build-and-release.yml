@@ -72,10 +72,11 @@ jobs:
           cp "$JAR" "$OUT"
           echo "artifact=$OUT" >> $GITHUB_OUTPUT
 
-      # 9. Extract Changelog
+      # 9. Extract Changelog from recent commits
       - name: Extract Changelog
         id: changelog
         run: |
+          # 提取最近 commit message
           COMMITS=$(git log -n 20 --pretty=format:"%s")
           CHANGELOG=""
           while read -r line; do
@@ -85,32 +86,45 @@ jobs:
             fi
           done <<< "$COMMITS"
           echo -e "$CHANGELOG" > extracted_changelog.txt
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          cat extracted_changelog.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
-      # 10. Merge Changelog
-      - name: Merge Changelog
+      # 10. Merge with existing release changelog and format
+      - name: Merge Changelog and format
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
-          gh release view "$MAIN_VERSION" --json body --jq '.body' > old_body.txt 2>/dev/null || true
-          awk '/^---/{flag=flag?0:1;next} flag' old_body.txt > old_changelog.txt || true
-          cat old_changelog.txt extracted_changelog.txt | sed '/^$/d' | sort -u > merged_changelog.txt
-          echo "---" > final_body.txt
-          cat merged_changelog.txt >> final_body.txt
-          echo "---" >> final_body.txt
-          echo "Content" >> final_body.txt
 
-      # 11. Create or Update Release (带 GH_TOKEN)
+          # 获取旧的 Release notes（如果有）
+          gh release view "$MAIN_VERSION" --json body --jq '.body' > old_body.txt 2>/dev/null || true
+
+          # 提取旧 changelog
+          OLD_CHANGELOG=$(awk 'NR>1' old_body.txt || true) # 忽略第一行大标题
+
+          # 合并新旧 changelog 去重
+          MERGED=$(cat old_body.txt extracted_changelog.txt | sed '/^$/d' | sort -u)
+
+          # 写入 final_body.txt，带大标题和列表
+          {
+            echo "# Changelog"
+            echo ""
+            while read -r line; do
+              if [ -n "$line" ]; then
+                echo "- $line"
+              fi
+            done <<< "$MERGED"
+          } > final_body.txt
+
+      # 11. Create or Update Release
       - name: Create or Update Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           ARTIFACT=${{ steps.rename.outputs.artifact }}
+
           if gh release view "$MAIN_VERSION" >/dev/null 2>&1; then
+            # release 已存在，上传 artifact 并更新 notes
             gh release upload "$MAIN_VERSION" "$ARTIFACT" --clobber
             gh release edit "$MAIN_VERSION" --notes-file final_body.txt
           else
+            # release 不存在，新建
             gh release create "$MAIN_VERSION" "$ARTIFACT" --title "$MAIN_VERSION" --notes-file final_body.txt
           fi
