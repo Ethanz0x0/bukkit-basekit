@@ -10,6 +10,8 @@ import java.io.InputStream;
 
 public class Config {
 
+    public static final int MAIN_CONFIG_VERSION = 1;
+
     private static final BaseKit plugin = BaseKit.getInstance();
     private static final FileConfiguration mainConfig;
     private static final FileConfiguration messagesConfig;

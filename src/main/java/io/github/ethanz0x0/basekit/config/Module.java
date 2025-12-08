@@ -14,7 +14,8 @@ public enum Module {
     PLAYER_JOIN("player-join", MinecraftVersion.MINECRAFT_1_18),
     PLAYER_QUIT("player-quit", MinecraftVersion.MINECRAFT_1_18),
     DISABLED_COMMANDS("disabled-commands", MinecraftVersion.MINECRAFT_1_18),
-    WELCOME_MESSAGE("welcome-message", MinecraftVersion.MINECRAFT_1_18);
+    WELCOME_MESSAGE("welcome-message", MinecraftVersion.MINECRAFT_1_18),
+    HELP_COMMAND("help-command", MinecraftVersion.MINECRAFT_1_18);
 
     private final String module;
     private final MinecraftVersion versionSupportAbove;

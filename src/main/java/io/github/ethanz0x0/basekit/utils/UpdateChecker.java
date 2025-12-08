@@ -23,8 +23,8 @@ public class UpdateChecker {
                 connection.setRequestProperty("User-Agent", "BaseKit-Plugin");
 
                 if (connection.getResponseCode() != 200) {
-                    plugin.getLogger().warning("Update checker failed to fetch releases, response code: "
-                            + connection.getResponseCode());
+                    plugin.getLogger().warning("Update checker failed to fetch releases, response code: " +
+                            connection.getResponseCode());
                     return true;
                 }
 

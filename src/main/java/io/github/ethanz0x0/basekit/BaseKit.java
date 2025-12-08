@@ -1,5 +1,6 @@
 package io.github.ethanz0x0.basekit;
 
+import io.github.ethanz0x0.basekit.config.Config;
 import io.github.ethanz0x0.basekit.listeners.PlayerListeners;
 import io.github.ethanz0x0.basekit.schedulers.UpdateCheckerScheduler;
 import io.github.ethanz0x0.basekit.utils.PlaceholderAPIHook;
@@ -20,7 +21,7 @@ public class BaseKit extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
-        getLogger().info("-------------------- BaseKit --------------------");
+        getLogger().info("---+-------------------- BaseKit --------------------+---");
         getLogger().info("Minecraft version: " + Bukkit.getBukkitVersion());
         getLogger().info("Plugin version: " + VersionHelper.getFullVersion());
         StartupInfo.checkAndCorrect();
@@ -42,6 +43,24 @@ public class BaseKit extends JavaPlugin {
                     "https://github.com/Ethanz0x0/bukkit-basekit/releases/tag/" + VersionHelper.getMainVersion());
             getLogger().info("-------------------------------------------------------");
         }
+
+        {
+            int configVersion = Config.getMainConfig().getInteger("config-version", -1);
+            if (configVersion < 0 || configVersion > Config.MAIN_CONFIG_VERSION) {
+                getLogger().warning("-------------------------------------------------------");
+                getLogger().warning("WARNING: We couldn't check your config version correctly!");
+                getLogger().warning("Maybe your configuration file is broken.");
+            } else if (configVersion < Config.MAIN_CONFIG_VERSION) {
+                getLogger().warning("-------------------------------------------------------");
+                getLogger().warning("WARNING: Your configuration file is outdated.");
+                getLogger().warning("Keep using old config may cause unexpected errors.");
+            }
+            getLogger().warning("You can backup the old config file and delete it. The new one will be " +
+                    "regenerated at the next time you restart the server.");
+            getLogger().warning("-------------------------------------------------------");
+        }
+        getLogger().info("---+-------------------------------------------------+---");
+
         getServer().getPluginManager().registerEvents(new PlayerListeners(), this);
         getServer().getScheduler().runTaskTimer(this, new UpdateCheckerScheduler(), 0L, 10*60*20L);
     }

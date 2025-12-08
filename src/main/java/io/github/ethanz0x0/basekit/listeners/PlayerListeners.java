@@ -62,12 +62,25 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
+
+        Module.HELP_COMMAND.ifEnabled(() -> {
+            if (!"help".equalsIgnoreCase(event.getMessage().split(" ")[0].toLowerCase().substring(1))) {
+                return;
+            }
+            player.sendMessage(Module.HELP_COMMAND.getText(player, "message",
+                    BuiltinPlaceholders.builder()
+                            .player(player).build()));
+        });
+
         Module.DISABLED_COMMANDS.ifEnabled(() -> {
+            String command = event.getMessage().split(" ")[0].toLowerCase().substring(1);
+            if (Module.HELP_COMMAND.isEnabled() && "help".equalsIgnoreCase(command)) {
+                return;
+            }
             if (player.hasPermission(Module.DISABLED_COMMANDS.getOption("bypass-permission", ""))) {
                 return;
             }
             List<String> disabledCommands = Module.DISABLED_COMMANDS.getOption("commands", new ArrayList<>());
-            String command = event.getMessage().split(" ")[0].toLowerCase().substring(1);
             if (disabledCommands.contains(command)) {
                 event.setCancelled(true);
                 player.sendMessage(Module.DISABLED_COMMANDS.getText(player, "prompt-message",

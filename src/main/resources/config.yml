@@ -13,6 +13,16 @@
 #                                                                                                            #
 #---+----------------------------------------------------------------------------------------------------+---#
 
+# |------------------------------------------------------------------|
+# |                         Config Version                           |
+# |                       ------------------                         |
+# | This option is used for detect whether your configuration file   |
+# | is outdated.                                                     |
+# |------------------------------------------------------------------|
+# | WARNING: Do not modify this option only if you know what you are |
+# |          doing!                                                  |
+# |------------------------------------------------------------------|
+config-version: 1
 
 # |------------------------------------------------------------------|
 # |                          Update Checker                          |
@@ -102,3 +112,20 @@ welcome-message:
     &eThis is your first time to join the server.
     &eHope you enjoy your play!
     &6--------------------------------------------------
+
+# |------------------------------------------------------------------|
+# |                          Help Command                            |
+# |                        ----------------                          |
+# | This will replace the vanilla help command to your custom help   |
+# | message. If enabled, whether help command is listed in           |
+# | "disabled-commands" or not, the command still can be executed.   |
+# |------------------------------------------------------------------|
+# | Placeholders:                                                    |
+# |   + %%player%% - Player name                                     |
+# |------------------------------------------------------------------|
+help-command:
+  enabled: true
+  message: |-
+    &eServer Help:
+    &b - This is the help message of your server.
+    &b - Please configure it in config.yml.
