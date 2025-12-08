@@ -70,6 +70,6 @@ public class BaseKit extends JavaPlugin {
 
     @Override
     public void onDisable() {
-
+        instance = null;
     }
 }
