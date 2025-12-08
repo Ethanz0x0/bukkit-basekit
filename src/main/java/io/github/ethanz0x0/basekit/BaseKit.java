@@ -39,7 +39,7 @@ public class BaseKit extends JavaPlugin {
             getLogger().info("-------------------------------------------------------");
             getLogger().info("It seems that you are launching the current " +
                     "version of the plugin for the first time, ");
-            getLogger().info("please check the full changelog at " +
+            getLogger().info("you can check the full changelog at " +
                     "https://github.com/Ethanz0x0/bukkit-basekit/releases/tag/" + VersionHelper.getMainVersion());
             getLogger().info("-------------------------------------------------------");
         }
@@ -50,14 +50,17 @@ public class BaseKit extends JavaPlugin {
                 getLogger().warning("-------------------------------------------------------");
                 getLogger().warning("WARNING: We couldn't check your config version correctly!");
                 getLogger().warning("Maybe your configuration file is broken.");
+                getLogger().warning("You can backup the old config file and delete it. The new one will be " +
+                        "regenerated at the next time you restart the server.");
+                getLogger().warning("-------------------------------------------------------");
             } else if (configVersion < Config.MAIN_CONFIG_VERSION) {
                 getLogger().warning("-------------------------------------------------------");
                 getLogger().warning("WARNING: Your configuration file is outdated.");
                 getLogger().warning("Keep using old config may cause unexpected errors.");
+                getLogger().warning("You can backup the old config file and delete it. The new one will be " +
+                        "regenerated at the next time you restart the server.");
+                getLogger().warning("-------------------------------------------------------");
             }
-            getLogger().warning("You can backup the old config file and delete it. The new one will be " +
-                    "regenerated at the next time you restart the server.");
-            getLogger().warning("-------------------------------------------------------");
         }
         getLogger().info("---+-------------------------------------------------+---");
 
