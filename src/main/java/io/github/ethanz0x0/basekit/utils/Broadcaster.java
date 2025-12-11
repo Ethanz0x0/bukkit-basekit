@@ -11,7 +11,8 @@ public class Broadcaster {
     public static void broadcastMessage(String message) {
         String msg = ChatColor.translateAlternateColorCodes('&', message);
         for (Player players : Bukkit.getOnlinePlayers()) {
-            players.sendMessage(PlaceholderAPIHook.isHooked() ? PlaceholderAPI.setPlaceholders(players, msg) : msg);
+            MessageUtil.sendMessage(players, PlaceholderAPIHook.isHooked() ?
+                    PlaceholderAPI.setPlaceholders(players, msg) : msg);
         }
     }
 

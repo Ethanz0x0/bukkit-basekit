@@ -32,7 +32,8 @@
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>shaded</shadedClassifierName>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Version>${project.version}</Main-Version>
                                         <!--suppress UnresolvedMavenProperty -->
@@ -40,6 +41,28 @@
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
+
+                            <relocations>
+                                <relocation>
+                                    <pattern>net.kyori.adventure</pattern>
+                                    <shadedPattern>io.github.ethanz0x0.shaded.net.kyori.adventure</shadedPattern>
+                                </relocation>
+
+                                <relocation>
+                                    <pattern>net.kyori.text</pattern>
+                                    <shadedPattern>io.github.ethanz0x0.shaded.net.kyori.text</shadedPattern>
+                                </relocation>
+
+                                <relocation>
+                                    <pattern>net.kyori.serializer</pattern>
+                                    <shadedPattern>io.github.ethanz0x0.shaded.net.kyori.serializer</shadedPattern>
+                                </relocation>
+
+                                <relocation>
+                                    <pattern>net.kyori.adventure.platform</pattern>
+                                    <shadedPattern>io.github.ethanz0x0.shaded.net.kyori.adventure.platform</shadedPattern>
+                                </relocation>
+                            </relocations>
                         </configuration>
                     </execution>
                 </executions>
@@ -89,6 +112,24 @@
             <groupId>com.github.cryptomorin</groupId>
             <artifactId>XSeries</artifactId>
             <version>13.5.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-api</artifactId>
+            <version>4.25.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-minimessage</artifactId>
+            <version>4.25.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-platform-bukkit</artifactId>
+            <version>4.4.1</version>
         </dependency>
     </dependencies>
 

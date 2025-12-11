@@ -1,5 +1,8 @@
 #---+----------------------------------------------------------------------------------------------------+---#
 #                                          BaseKit - Global Message                                          #
 #---+----------------------------------------------------------------------------------------------------+---#
-prefix: "&8[&6BaseKit&8] &r"
-update-checker: "&eThere is a newer version of BaseKit, you can download it at &ahttps://github.com/Ethanz0x0/bukkit-basekit/releases/"
+prefix: "<dark_gray>[</dark_gray><gold>BaseKit</gold><dark_gray>]</dark_gray> "
+update-checker-reminder: "<yellow>There is a newer version of BaseKit, you can download it at</yellow> <green>https://github.com/Ethanz0x0/bukkit-basekit/releases/</green>"
+command-no-permission: "<red>You don't have permission to execute this command!</red>"
+command-check-update-checking: "<gray>Checking for updates, this may takes a while...</gray>"
+command-check-update-latest: "<green>You are using the latest version of BaseKit!</green>"

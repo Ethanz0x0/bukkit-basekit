@@ -5,6 +5,7 @@ import io.github.ethanz0x0.basekit.config.Messages;
 import io.github.ethanz0x0.basekit.config.Module;
 import io.github.ethanz0x0.basekit.schedulers.UpdateCheckerScheduler;
 import io.github.ethanz0x0.basekit.utils.Broadcaster;
+import io.github.ethanz0x0.basekit.utils.MessageUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,7 +22,7 @@ public class PlayerListeners implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         if (UpdateCheckerScheduler.NEED_UPDATE && player.hasPermission("basekit.update-checker")) {
-            player.sendMessage(Messages.getPrefixedMessage("update-checker"));
+            MessageUtil.sendMessage(player, Messages.getPrefixedMessage("update-checker-reminder"));
         }
         Module.PLAYER_JOIN.ifEnabled(() -> {
             event.setJoinMessage(null);
@@ -34,11 +35,11 @@ public class PlayerListeners implements Listener {
         });
         Module.WELCOME_MESSAGE.ifEnabled(() -> {
             if (player.hasPlayedBefore()) {
-                player.sendMessage(Module.WELCOME_MESSAGE.getText(player, "welcome-message",
+                MessageUtil.sendMessage(player, Module.WELCOME_MESSAGE.getText(player, "welcome-message",
                         BuiltinPlaceholders.builder()
                                 .player(player).build()));
             } else {
-                player.sendMessage(Module.WELCOME_MESSAGE.getText(player, "first-join-message",
+                MessageUtil.sendMessage(player, Module.WELCOME_MESSAGE.getText(player, "first-join-message",
                         BuiltinPlaceholders.builder()
                                 .player(player).build()));
             }
@@ -67,7 +68,7 @@ public class PlayerListeners implements Listener {
             if (!"help".equalsIgnoreCase(event.getMessage().split(" ")[0].toLowerCase().substring(1))) {
                 return;
             }
-            player.sendMessage(Module.HELP_COMMAND.getText(player, "message",
+            MessageUtil.sendMessage(player, Module.HELP_COMMAND.getText(player, "message",
                     BuiltinPlaceholders.builder()
                             .player(player).build()));
         });
@@ -83,7 +84,7 @@ public class PlayerListeners implements Listener {
             List<String> disabledCommands = Module.DISABLED_COMMANDS.getOption("commands", new ArrayList<>());
             if (disabledCommands.contains(command)) {
                 event.setCancelled(true);
-                player.sendMessage(Module.DISABLED_COMMANDS.getText(player, "prompt-message",
+                MessageUtil.sendMessage(player, Module.DISABLED_COMMANDS.getText(player, "prompt-message",
                         BuiltinPlaceholders.builder().append("command", command)
                                 .build()));
             }

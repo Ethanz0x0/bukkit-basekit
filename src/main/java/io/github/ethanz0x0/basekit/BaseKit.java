@@ -1,11 +1,14 @@
 package io.github.ethanz0x0.basekit;
 
+import io.github.ethanz0x0.basekit.commands.BaseKitCommand;
 import io.github.ethanz0x0.basekit.config.Config;
 import io.github.ethanz0x0.basekit.listeners.PlayerListeners;
 import io.github.ethanz0x0.basekit.schedulers.UpdateCheckerScheduler;
+import io.github.ethanz0x0.basekit.utils.CommandUtil;
 import io.github.ethanz0x0.basekit.utils.PlaceholderAPIHook;
 import io.github.ethanz0x0.basekit.utils.StartupInfo;
 import io.github.ethanz0x0.basekit.utils.VersionHelper;
+import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -17,10 +20,17 @@ public class BaseKit extends JavaPlugin {
         return instance;
     }
 
+    private BukkitAudiences adventure;
+
+    public BukkitAudiences adventure() {
+        return adventure;
+    }
 
     @Override
     public void onEnable() {
         instance = this;
+        adventure = BukkitAudiences.create(this);
+
         getLogger().info("---+-------------------- BaseKit --------------------+---");
         getLogger().info("Minecraft version: " + Bukkit.getBukkitVersion());
         getLogger().info("Plugin version: " + VersionHelper.getFullVersion());
@@ -64,12 +74,20 @@ public class BaseKit extends JavaPlugin {
         }
         getLogger().info("---+-------------------------------------------------+---");
 
+
         getServer().getPluginManager().registerEvents(new PlayerListeners(), this);
+
         getServer().getScheduler().runTaskTimer(this, new UpdateCheckerScheduler(), 0L, 10*60*20L);
+
+        CommandUtil.registerCommand(new BaseKitCommand());
     }
 
     @Override
     public void onDisable() {
         instance = null;
+        if (adventure != null) {
+            adventure.close();
+            adventure = null;
+        }
     }
 }
