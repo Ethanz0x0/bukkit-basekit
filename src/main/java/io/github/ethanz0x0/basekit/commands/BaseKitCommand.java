@@ -1,5 +1,6 @@
 package io.github.ethanz0x0.basekit.commands;
 
+import io.github.ethanz0x0.basekit.config.Config;
 import io.github.ethanz0x0.basekit.config.Messages;
 import io.github.ethanz0x0.basekit.utils.MessageUtil;
 import io.github.ethanz0x0.basekit.utils.UpdateChecker;
@@ -35,6 +36,11 @@ public class BaseKitCommand extends Command {
                         }
                     });
                     return true;
+                }
+                case "reload" -> {
+                    Config.getMainConfig().reload();
+                    Config.getMessagesConfig().reload();
+                    Config.getStartupInfoConfig().reload();
                 }
             }
         }

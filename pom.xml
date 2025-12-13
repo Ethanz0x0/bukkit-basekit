@@ -44,23 +44,8 @@
 
                             <relocations>
                                 <relocation>
-                                    <pattern>net.kyori.adventure</pattern>
-                                    <shadedPattern>io.github.ethanz0x0.shaded.net.kyori.adventure</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>net.kyori.text</pattern>
-                                    <shadedPattern>io.github.ethanz0x0.shaded.net.kyori.text</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>net.kyori.serializer</pattern>
-                                    <shadedPattern>io.github.ethanz0x0.shaded.net.kyori.serializer</shadedPattern>
-                                </relocation>
-
-                                <relocation>
-                                    <pattern>net.kyori.adventure.platform</pattern>
-                                    <shadedPattern>io.github.ethanz0x0.shaded.net.kyori.adventure.platform</shadedPattern>
+                                    <pattern>net.kyori</pattern>
+                                    <shadedPattern>io.github.ethanz0x0.basekit.external.net.kyori</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>

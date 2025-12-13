@@ -54,7 +54,7 @@ placeholderapi-hook: true
 # |------------------------------------------------------------------|
 player-join:
   enabled: true
-  message: "&8[&a+&8] &f%%player%% has joined the server!"
+  message: "<dark_gray>[</dark_gray><dark_green>+</dark_green><dark_gray>]</dark_gray> <white>%%player%% has joined the server!</white>"
   sound: BLOCK_NOTE_BLOCK_PLING,1,2
 
 # |------------------------------------------------------------------|
@@ -68,7 +68,7 @@ player-join:
 # |------------------------------------------------------------------|
 player-quit:
   enabled: true
-  message: "&8[&a+&8] &f%%player%% has left the server!"
+  message: "<dark_gray>[</dark_gray><dark_green>+</dark_green><dark_gray>]</dark_gray> <white>%%player%% has left the server!</white>"
   sound: BLOCK_NOTE_BLOCK_PLING,1,0.5
 
 # |------------------------------------------------------------------|
@@ -78,7 +78,7 @@ player-quit:
 # |------------------------------------------------------------------|
 disabled-commands:
   enabled: true
-  prompt-message: "&cThis command is disabled on this server! (/%%command%%)"
+  prompt-message: "<red>This command is disabled on this server! (/%%command%%)</red>"
   bypass-permission: "basekit.bypass.disabled-commands"
   commands:
     - bukkit:plugins
@@ -103,15 +103,15 @@ disabled-commands:
 welcome-message:
   enabled: true
   welcome-message: |-
-    &6--------------------------------------------------
-    &aWelcome back to &dYour Server &a%%player%%!
-    &6--------------------------------------------------
+    <gold>--------------------------------------------------</gold>
+    <green>Welcome back to</green> <pink>Your Server</pink> <green>%%player%%!</green>
+    <gold>--------------------------------------------------</gold>
   first-join-message: |-
-    &6--------------------------------------------------
-    &aWelcome to &dYour Server &a%player%%%!
-    &eThis is your first time to join the server.
-    &eHope you enjoy your play!
-    &6--------------------------------------------------
+    <gold>--------------------------------------------------</gold>
+    <green>Welcome to</green> <pink>Your Server</pink> <green>%player%%%!</green>
+    <yellow>This is your first time to join the server.</yellow>
+    <yellow>Hope you enjoy your play!</yellow>
+    <gold>--------------------------------------------------</gold>
 
 # |------------------------------------------------------------------|
 # |                          Help Command                            |
@@ -126,6 +126,6 @@ welcome-message:
 help-command:
   enabled: true
   message: |-
-    &eServer Help:
-    &b - This is the help message of your server.
-    &b - Please configure it in config.yml.
+    <yellow>Server Help:</yellow>
+    <aqua> - This is the help message of your server.</aqua>
+    <aqua> - Please configure it in config.yml.</aqua>
