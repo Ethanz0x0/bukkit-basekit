@@ -58,7 +58,7 @@ jobs:
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           sed -i "s/^version: .*/version: ${MAIN_VERSION}/" src/main/resources/plugin.yml
 
-      # Build with Maven (internal build number passed as property)
+      # Build with Maven
       - name: Build with Maven
         run: |
           COMMIT_SHA=${{ steps.commit_sha.outputs.commit_sha }}
@@ -82,9 +82,9 @@ jobs:
           AFTER_SHA=${{ github.event.after }}
 
           > extracted_changelog.txt
+          HAS_CL=false
 
           if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
-            echo "Detected initial push or force push — using last 10 commits"
             COMMITS=$(git log -n 10 --pretty=format:"%B")
           else
             COMMITS=$(git log $BEFORE_SHA..$AFTER_SHA --pretty=format:"%B")
@@ -94,22 +94,28 @@ jobs:
             if echo "$line" | grep -iq "^\[CL\]"; then
               ITEM=$(echo "$line" | sed -E 's/^\[CL\]\s*//I')
               printf "%s\n" "$ITEM" >> extracted_changelog.txt
+              HAS_CL=true
             fi
           done <<< "$COMMITS"
 
-      # Merge Changelog and format
+          echo "has_cl=$HAS_CL" >> $GITHUB_OUTPUT
+
+      # Merge Changelog (ONLY if this push has [CL])
       - name: Merge Changelog
+        if: steps.extract_changelog.outputs.has_cl == 'true'
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
+
           gh release view "$MAIN_VERSION" --json body --jq '.body' > old_body.txt 2>/dev/null || true
+
           MERGED=$(cat old_body.txt extracted_changelog.txt | sed '/^$/d' | sort -u)
+
           > final_body.txt
           echo "# Changelog" >> final_body.txt
           echo "" >> final_body.txt
+
           while IFS= read -r line; do
-            if [ -n "$line" ]; then
-              echo "- $line" >> final_body.txt
-            fi
+            echo "- $line" >> final_body.txt
           done <<< "$MERGED"
 
       # Create or Update Release
@@ -119,9 +125,21 @@ jobs:
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           RELEASE_FILE=${{ steps.prepare_artifact.outputs.release_artifact }}
+          HAS_CL=${{ steps.extract_changelog.outputs.has_cl }}
+
           if gh release view "$MAIN_VERSION" >/dev/null 2>&1; then
             gh release upload "$MAIN_VERSION" "$RELEASE_FILE" --clobber
-            gh release edit "$MAIN_VERSION" --notes-file final_body.txt
+
+            if [ "$HAS_CL" = "true" ]; then
+              gh release edit "$MAIN_VERSION" --notes-file final_body.txt
+            fi
           else
-            gh release create "$MAIN_VERSION" "$RELEASE_FILE" --title "$MAIN_VERSION" --notes-file final_body.txt
+            if [ "$HAS_CL" = "true" ]; then
+              gh release create "$MAIN_VERSION" "$RELEASE_FILE" \
+                --title "$MAIN_VERSION" \
+                --notes-file final_body.txt
+            else
+              gh release create "$MAIN_VERSION" "$RELEASE_FILE" \
+                --title "$MAIN_VERSION"
+            fi
           fi

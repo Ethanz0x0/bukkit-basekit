@@ -30,6 +30,7 @@ config-version: 1
 # | The plugin will send a notification to the server every time it  |
 # | is started or when a player with administrator privileges enters |
 # | the server.                                                      |
+# | Check will be performed every 10 minutes.                        |
 # |------------------------------------------------------------------|
 update-checker: true
 

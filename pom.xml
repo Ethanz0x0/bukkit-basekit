@@ -6,7 +6,7 @@
 
     <groupId>io.github.ethanz0x0</groupId>
     <artifactId>bukkit-basekit</artifactId>
-    <version>0.1.2-early-dev</version>
+    <version>0.1.3-early-dev</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
