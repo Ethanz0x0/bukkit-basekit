@@ -71,6 +71,7 @@ public class PlayerListeners implements Listener {
             MessageUtil.sendMessage(player, Module.HELP_COMMAND.getText(player, "message",
                     BuiltinPlaceholders.builder()
                             .player(player).build()));
+            event.setCancelled(true);
         });
 
         Module.DISABLED_COMMANDS.ifEnabled(() -> {
@@ -87,6 +88,7 @@ public class PlayerListeners implements Listener {
                 MessageUtil.sendMessage(player, Module.DISABLED_COMMANDS.getText(player, "prompt-message",
                         BuiltinPlaceholders.builder().append("command", command)
                                 .build()));
+                event.setCancelled(true);
             }
         });
     }

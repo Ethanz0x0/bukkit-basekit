@@ -26,7 +26,7 @@ public class BaseKitCommand extends Command {
 
         if (args.length == 1) {
             switch (args[0].toLowerCase()) {
-                case "version" -> {
+                case "version", "ver" -> {
                     MessageUtil.sendMessage(sender, Messages.getPrefixedMessage("command-check-update-checking"));
                     UpdateChecker.check().thenAccept(latest -> {
                         if (latest) {
@@ -38,9 +38,11 @@ public class BaseKitCommand extends Command {
                     return true;
                 }
                 case "reload" -> {
+                    MessageUtil.sendMessage(sender, Messages.getPrefixedMessage("command-reload-performing"));
                     Config.getMainConfig().reload();
                     Config.getMessagesConfig().reload();
                     Config.getStartupInfoConfig().reload();
+                    MessageUtil.sendMessage(sender, Messages.getPrefixedMessage("command-reload-success"));
                 }
             }
         }

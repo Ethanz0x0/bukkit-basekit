@@ -104,11 +104,11 @@ welcome-message:
   enabled: true
   welcome-message: |-
     <gold>--------------------------------------------------</gold>
-    <green>Welcome back to</green> <pink>Your Server</pink> <green>%%player%%!</green>
+    <green>Welcome back to</green> <purple>Your Server</purple> <green>%%player%%!</green>
     <gold>--------------------------------------------------</gold>
   first-join-message: |-
     <gold>--------------------------------------------------</gold>
-    <green>Welcome to</green> <pink>Your Server</pink> <green>%player%%%!</green>
+    <green>Welcome to</green> <purple>Your Server</purple> <green>%%player%%!</green>
     <yellow>This is your first time to join the server.</yellow>
     <yellow>Hope you enjoy your play!</yellow>
     <gold>--------------------------------------------------</gold>

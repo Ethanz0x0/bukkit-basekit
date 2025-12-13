@@ -6,5 +6,5 @@ update-checker-reminder: "<yellow>There is a newer version of BaseKit, you can d
 command-no-permission: "<red>You don't have permission to execute this command!</red>"
 command-check-update-checking: "<gray>Checking for updates, this may takes a while...</gray>"
 command-check-update-latest: "<green>You are using the latest version of BaseKit!</green>"
-command-reload-reloading: "<gray>Reloading the plugin...</gray>"
+command-reload-performing: "<gray>Reloading the plugin...</gray>"
 command-reload-success: "<yellow>The plugin has been reloaded!</yellow>"
