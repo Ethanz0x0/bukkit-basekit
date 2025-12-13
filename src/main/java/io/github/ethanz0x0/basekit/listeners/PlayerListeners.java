@@ -9,6 +9,7 @@ import io.github.ethanz0x0.basekit.utils.MessageUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -90,6 +91,47 @@ public class PlayerListeners implements Listener {
                                 .build()));
                 event.setCancelled(true);
             }
+        });
+    }
+
+    @EventHandler
+    public void onAsyncPlayerChat(AsyncPlayerChatEvent event) {
+        Player player = event.getPlayer();
+
+        String message = event.getMessage();
+        Module.CHAT_BLOCK_BAD_WORDS.ifEnabled(() -> {
+            if (event.isCancelled()) {
+                return;
+            }
+
+            for (String keyWord : Module.CHAT_BLOCK_BAD_WORDS.getOption("key-words", new ArrayList<String>())) {
+                if (message.toLowerCase().contains(keyWord.toLowerCase())) {
+                    event.setCancelled(true);
+                    MessageUtil.sendMessage(player, Module.CHAT_BLOCK_BAD_WORDS.getText("prompt-message"));
+                    return;
+                }
+            }
+        });
+
+        Module.CHAT_BLOCK_SIMILAR_MESSAGE.ifEnabled(() -> {
+            if (event.isCancelled()) {
+                return;
+            }
+
+            // TODO impl
+        });
+
+        Module.CHAT_MESSAGE_FORMAT.ifEnabled(() -> {
+            if (event.isCancelled()) {
+                return;
+            }
+
+            event.setCancelled(true);
+            Broadcaster.broadcastMessage(Module.CHAT_MESSAGE_FORMAT.getText("format",
+                    BuiltinPlaceholders.builder()
+                            .player(player)
+                            .append("message", message)
+                            .build()));
         });
     }
 }

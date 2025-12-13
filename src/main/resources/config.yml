@@ -105,11 +105,11 @@ welcome-message:
   enabled: true
   welcome-message: |-
     <gold>--------------------------------------------------</gold>
-    <green>Welcome back to</green> <purple>Your Server</purple> <green>%%player%%!</green>
+    <green>Welcome back to</green> <light_purple>Your Server</light_purple> <green>%%player%%!</green>
     <gold>--------------------------------------------------</gold>
   first-join-message: |-
     <gold>--------------------------------------------------</gold>
-    <green>Welcome to</green> <purple>Your Server</purple> <green>%%player%%!</green>
+    <green>Welcome to</green> <light_purple>Your Server</light_purple> <green>%%player%%!</green>
     <yellow>This is your first time to join the server.</yellow>
     <yellow>Hope you enjoy your play!</yellow>
     <gold>--------------------------------------------------</gold>
@@ -130,3 +130,27 @@ help-command:
     <yellow>Server Help:</yellow>
     <aqua> - This is the help message of your server.</aqua>
     <aqua> - Please configure it in config.yml.</aqua>
+
+# |------------------------------------------------------------------|
+# |                              Chat                                |
+# |                            --------                              |
+# | Change the vanilla chat format, block similar chats, and more.   |
+# |------------------------------------------------------------------|
+# | Placeholders:                                                    |
+# |   + %%player%% - Player name                                     |
+# |   + %%message%% - Message content                                |
+# |------------------------------------------------------------------|
+chat:
+  message-format:
+    enabled: true
+    format: "<yellow>%%player%%</yellow><white>: %%message%%</white>"
+  block-similar-message:
+    enabled: true
+    similarity: 0.7
+    prompt-message: "<red>You cannot send the same message twice!</red>"
+  block-bad-words:
+    enabled: true
+    prompt-message: "<red>Your message may contains bad words!</red>"
+    key-words:
+      - "fuck"
+      - "shit"

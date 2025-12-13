@@ -15,7 +15,10 @@ public enum Module {
     PLAYER_QUIT("player-quit", MinecraftVersion.MINECRAFT_1_18),
     DISABLED_COMMANDS("disabled-commands", MinecraftVersion.MINECRAFT_1_18),
     WELCOME_MESSAGE("welcome-message", MinecraftVersion.MINECRAFT_1_18),
-    HELP_COMMAND("help-command", MinecraftVersion.MINECRAFT_1_18);
+    HELP_COMMAND("help-command", MinecraftVersion.MINECRAFT_1_18),
+    CHAT_MESSAGE_FORMAT("chat.message-format", MinecraftVersion.MINECRAFT_1_18),
+    CHAT_BLOCK_SIMILAR_MESSAGE("chat.block-similar-message", MinecraftVersion.MINECRAFT_1_18),
+    CHAT_BLOCK_BAD_WORDS("chat.block-bad-words", MinecraftVersion.MINECRAFT_1_18);
 
     private final String module;
     private final MinecraftVersion versionSupportAbove;
