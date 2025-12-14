@@ -42,6 +42,9 @@ public class ChatListener implements Listener {
         Module.CHAT_HISTORY.ifEnabled(() -> {
             Module.CHAT_BLOCK_SIMILAR_MESSAGE.ifEnabled(() -> {
                 List<ChatRecord> records = ChatRecorder.getRecords(player);
+                if (records.isEmpty()) {
+                    return;
+                }
                 ChatRecord lastMessage = records.get(records.size() - 1);
 
                 if (Duration.between(LocalDateTime.now(), lastMessage.time()).getSeconds() <= 120) {
