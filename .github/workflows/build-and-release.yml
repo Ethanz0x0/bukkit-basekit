@@ -7,18 +7,17 @@ on:
       - master
 
 permissions:
-  contents: write # 必须要有写入权限才能创建/更新 Release
+  contents: write
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # 确保获取所有历史记录以进行 git log
+          fetch-depth: 0
 
       # Setup Java 17
       - name: Setup JDK 17
@@ -74,14 +73,13 @@ jobs:
           cp "$SHADOW_JAR" "$RELEASE_FILE"
           echo "release_artifact=$RELEASE_FILE" >> $GITHUB_OUTPUT
 
-      # --- 🚀 增强后的 Changelog 提取 ---
+      # Extract Changelog
       - name: Extract Changelog
         id: extract_changelog
         run: |
           BEFORE_SHA=${{ github.event.before }}
           AFTER_SHA=${{ github.event.after }}
 
-          # 初始化空文件
           > extracted_add.txt
           > extracted_remove.txt
           > extracted_fix.txt
@@ -94,9 +92,7 @@ jobs:
             COMMITS=$(git log $BEFORE_SHA..$AFTER_SHA --pretty=format:"%B")
           fi
           
-          # 循环处理所有提交信息
           while IFS= read -r line; do
-            # 去除前后空格
             CLEAN_LINE=$(echo "$line" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
 
             if echo "$CLEAN_LINE" | grep -iq "^\[ADD\]"; then
@@ -114,44 +110,36 @@ jobs:
             fi
           done <<< "$COMMITS"
 
-      # --- 🚀 增强后的 Changelog 合并和格式化 (防覆盖) ---
+      # Merge Changelog and Format
       - name: Merge Changelog
         run: |
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           
-          # 尝试获取当前 Release 的 body
           gh release view "$MAIN_VERSION" --json body --jq '.body' > old_body.txt 2>/dev/null || true
           
-          # 检查是否有新的 Changelog 内容被提取 (任一文件非空即有新内容)
           if [ -s extracted_add.txt ] || [ -s extracted_remove.txt ] || [ -s extracted_fix.txt ] || [ -s extracted_other.txt ]; then
               HAS_NEW_CHANGES=true
           else
               HAS_NEW_CHANGES=false
           fi
           
-          # --- 防覆盖逻辑：如果无新变更，则保留旧内容 ---
           if [ "$HAS_NEW_CHANGES" = false ] && [ -s old_body.txt ]; then
               echo "No new [ADD/REMOVE/FIX/OTHER] tags found. Retaining existing Release body."
               cp old_body.txt final_body.txt
           
-          # --- 有新变更或旧内容为空，重新生成 body ---
           else
               > final_body.txt
           
-              # 1. 写入标题
               echo "# Changelog" >> final_body.txt
               echo "" >> final_body.txt
           
-              # 2. 保留 Release 中可能存在的标题或非列表描述文字
               if [ -s old_body.txt ]; then
-                  # 提取 old_body.txt 中在 "# Changelog" 标题之前的所有内容
                   OLD_PRE_BODY=$(cat old_body.txt | sed '/^# Changelog/,$d')
                   if [ -n "$OLD_PRE_BODY" ]; then
                       printf "%s\n\n" "$OLD_PRE_BODY" >> final_body.txt
                   fi
               fi
 
-              # 定义一个函数，用于格式化和去重合并
               format_and_merge() {
                   local title=$1
                   local filename=$2
@@ -159,25 +147,21 @@ jobs:
 
                   if [ -s "$filename" ]; then
                       echo "## $emoji $title" >> final_body.txt
-                      # 合并旧内容（如果有列表项），去重，并添加 Markdown 列表前缀
-                      # 这里我们只考虑新的内容，旧的列表项在最后单独处理，以防格式冲突
                       cat "$filename" | sed '/^$/d' | sort -u | sed 's/^/- /' >> final_body.txt
                       echo "" >> final_body.txt
                   fi
               }
 
-              format_and_merge "新增功能 (Added)" extracted_add.txt "✨"
-              format_and_merge "移除功能 (Removed)" extracted_remove.txt "🗑️"
-              format_and_merge "修复 (Fixed)" extracted_fix.txt "🐞"
-              format_and_merge "其他更新 (Other)" extracted_other.txt "📝"
+              format_and_merge "Add" extracted_add.txt "✨"
+              format_and_merge "Remov" extracted_remove.txt "🗑️"
+              format_and_merge "Fix" extracted_fix.txt "🐞"
+              format_and_merge "Other" extracted_other.txt "📝"
           
-              # 3. 附加旧的 Release Body 中的列表项，防止丢失
               if [ -s old_body.txt ]; then
-                  # 提取 old_body.txt 中所有以 "-" 或 "*" 开头的行（列表项）
                   OLD_CHANGES=$(cat old_body.txt | grep -E '^\s*[-*]' | sort -u)
                   if [ -n "$OLD_CHANGES" ]; then
                       echo "---" >> final_body.txt
-                      echo "## 历史/旧版项目 (Historical/Legacy Items)" >> final_body.txt
+                      echo "## Historical/Legacy Items" >> final_body.txt
                       printf "%s\n" "$OLD_CHANGES" >> final_body.txt
                   fi
               fi
@@ -191,15 +175,11 @@ jobs:
           MAIN_VERSION=${{ steps.read_version.outputs.main_version }}
           RELEASE_FILE=${{ steps.prepare_artifact.outputs.release_artifact }}
           
-          # 检查 Release 是否存在
           if gh release view "$MAIN_VERSION" >/dev/null 2>&1; then
             echo "Release $MAIN_VERSION exists, updating..."
-            # 更新 Artifact
             gh release upload "$MAIN_VERSION" "$RELEASE_FILE" --clobber
-            # 更新 Release 描述
             gh release edit "$MAIN_VERSION" --notes-file final_body.txt
           else
             echo "Release $MAIN_VERSION does not exist, creating..."
-            # 创建新的 Release
             gh release create "$MAIN_VERSION" "$RELEASE_FILE" --title "$MAIN_VERSION" --notes-file final_body.txt
           fi
