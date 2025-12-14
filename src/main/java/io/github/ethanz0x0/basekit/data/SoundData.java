@@ -1,4 +1,4 @@
-package io.github.ethanz0x0.basekit.utils.sound;
+package io.github.ethanz0x0.basekit.data;
 
 import com.cryptomorin.xseries.XSound;
 import org.bukkit.entity.Player;

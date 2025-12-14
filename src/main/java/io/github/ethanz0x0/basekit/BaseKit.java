@@ -2,7 +2,9 @@ package io.github.ethanz0x0.basekit;
 
 import io.github.ethanz0x0.basekit.commands.BaseKitCommand;
 import io.github.ethanz0x0.basekit.config.Config;
-import io.github.ethanz0x0.basekit.listeners.PlayerListeners;
+import io.github.ethanz0x0.basekit.listeners.ChatListener;
+import io.github.ethanz0x0.basekit.listeners.PlayerCommandListener;
+import io.github.ethanz0x0.basekit.listeners.PlayerJoinQuitListener;
 import io.github.ethanz0x0.basekit.schedulers.UpdateCheckerScheduler;
 import io.github.ethanz0x0.basekit.utils.CommandUtil;
 import io.github.ethanz0x0.basekit.utils.PlaceholderAPIHook;
@@ -34,8 +36,10 @@ public class BaseKit extends JavaPlugin {
         getLogger().info("---+-------------------- BaseKit --------------------+---");
         getLogger().info("Minecraft version: " + Bukkit.getBukkitVersion());
         getLogger().info("Plugin version: " + VersionHelper.getFullVersion());
+
         StartupInfo.checkAndCorrect();
         PlaceholderAPIHook.checkAndHook();
+
         if (VersionHelper.getFullVersion().endsWith("unknown")) {
             getLogger().warning("-------------------------------------------------------");
             getLogger().warning("Couldn't detect your plugin version, maybe this is a custom build?");
@@ -72,14 +76,13 @@ public class BaseKit extends JavaPlugin {
                 getLogger().warning("-------------------------------------------------------");
             }
         }
+
+        registerCommands();
+        registerListeners();
+        scheduleTasks();
+
+        getLogger().info("Plugin is successfully loaded! Thanks for using BaseKit.");
         getLogger().info("---+-------------------------------------------------+---");
-
-
-        getServer().getPluginManager().registerEvents(new PlayerListeners(), this);
-
-        getServer().getScheduler().runTaskTimer(this, new UpdateCheckerScheduler(), 0L, 10*60*20L);
-
-        CommandUtil.registerCommand(new BaseKitCommand());
     }
 
     @Override
@@ -89,5 +92,19 @@ public class BaseKit extends JavaPlugin {
             adventure.close();
             adventure = null;
         }
+    }
+
+    private void registerListeners() {
+        getServer().getPluginManager().registerEvents(new PlayerJoinQuitListener(), this);
+        getServer().getPluginManager().registerEvents(new PlayerCommandListener(), this);
+        getServer().getPluginManager().registerEvents(new ChatListener(), this);
+    }
+
+    private void scheduleTasks() {
+        getServer().getScheduler().runTaskTimer(this, new UpdateCheckerScheduler(), 0L, 10*60*20L);
+    }
+
+    private void registerCommands() {
+        CommandUtil.registerCommand(new BaseKitCommand());
     }
 }

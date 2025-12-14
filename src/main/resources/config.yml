@@ -136,21 +136,31 @@ help-command:
 # |                            --------                              |
 # | Change the vanilla chat format, block similar chats, and more.   |
 # |------------------------------------------------------------------|
-# | Placeholders:                                                    |
-# |   + %%player%% - Player name                                     |
-# |   + %%message%% - Message content                                |
-# |------------------------------------------------------------------|
 chat:
+  # |------------------------------------------------------------------|
+  # |                         Message Format                           |
+  # |                       ------------------                         |
+  # | Change the vanilla chat format. As this option is enabled, the   |
+  # | vanilla console chat output will be unavailable. So we have      |
+  # | another way to log chat messages in console.                     |
+  # |------------------------------------------------------------------|
+  # | Placeholders:                                                    |
+  # |   + %%player%% - Player name                                     |
+  # |   + %%message%% - Message content                                |
+  # |------------------------------------------------------------------|
   message-format:
     enabled: true
     format: "<yellow>%%player%%</yellow><white>: %%message%%</white>"
-  block-similar-message:
-    enabled: true
-    similarity: 0.7
-    prompt-message: "<red>You cannot send the same message twice!</red>"
+    console-output: true
   block-bad-words:
     enabled: true
     prompt-message: "<red>Your message may contains bad words!</red>"
     key-words:
       - "fuck"
       - "shit"
+  chat-history:
+    enabled: true
+    block-similar-message:
+      enabled: true
+      similarity: 0.7
+      prompt-message: "<red>You cannot send the same message twice!</red>"

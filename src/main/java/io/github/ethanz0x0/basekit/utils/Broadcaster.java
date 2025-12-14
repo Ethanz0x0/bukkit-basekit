@@ -1,6 +1,6 @@
 package io.github.ethanz0x0.basekit.utils;
 
-import io.github.ethanz0x0.basekit.utils.sound.SoundData;
+import io.github.ethanz0x0.basekit.data.SoundData;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;

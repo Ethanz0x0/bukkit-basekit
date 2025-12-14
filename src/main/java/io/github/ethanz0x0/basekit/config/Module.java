@@ -1,9 +1,9 @@
 package io.github.ethanz0x0.basekit.config;
 
 import com.cryptomorin.xseries.XSound;
+import io.github.ethanz0x0.basekit.data.SoundData;
 import io.github.ethanz0x0.basekit.utils.MinecraftVersion;
 import io.github.ethanz0x0.basekit.utils.PlaceholderAPIHook;
-import io.github.ethanz0x0.basekit.utils.sound.SoundData;
 import io.github.ethanz0x0.nucleus.object.format.Formatter;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.ChatColor;
@@ -17,7 +17,8 @@ public enum Module {
     WELCOME_MESSAGE("welcome-message", MinecraftVersion.MINECRAFT_1_18),
     HELP_COMMAND("help-command", MinecraftVersion.MINECRAFT_1_18),
     CHAT_MESSAGE_FORMAT("chat.message-format", MinecraftVersion.MINECRAFT_1_18),
-    CHAT_BLOCK_SIMILAR_MESSAGE("chat.block-similar-message", MinecraftVersion.MINECRAFT_1_18),
+    CHAT_HISTORY("chat.chat-history", MinecraftVersion.MINECRAFT_1_18),
+    CHAT_BLOCK_SIMILAR_MESSAGE("chat.chat-history.block-similar-message", MinecraftVersion.MINECRAFT_1_18),
     CHAT_BLOCK_BAD_WORDS("chat.block-bad-words", MinecraftVersion.MINECRAFT_1_18);
 
     private final String module;
@@ -34,7 +35,7 @@ public enum Module {
 
     public boolean isEnabled() {
         return MinecraftVersion.getCurrentVersion().isAfterOrCurrent(versionSupportAbove) &&
-                Config.getMainConfig().getBoolean(module + ".enabled");
+                Config.getMainConfig().getBoolean(module + ".enabled", false);
     }
 
     public void ifEnabled(Runnable run) {
