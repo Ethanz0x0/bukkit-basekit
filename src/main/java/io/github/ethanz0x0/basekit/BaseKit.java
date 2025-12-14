@@ -78,7 +78,7 @@ public class BaseKit extends JavaPlugin {
                 getLogger().warning("-------------------------------------------------------");
             }
         }
-
+//
         registerCommands();
         registerListeners();
         scheduleTasks();
