@@ -153,7 +153,7 @@ jobs:
               }
 
               format_and_merge "Add" extracted_add.txt "✨"
-              format_and_merge "Remov" extracted_remove.txt "🗑️"
+              format_and_merge "Remove" extracted_remove.txt "🗑️"
               format_and_merge "Fix" extracted_fix.txt "🐞"
               format_and_merge "Other" extracted_other.txt "📝"
           
