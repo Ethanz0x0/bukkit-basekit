@@ -3,17 +3,16 @@ package io.github.ethanz0x0.basekit.config;
 import io.github.ethanz0x0.basekit.utils.PlaceholderAPIHook;
 import io.github.ethanz0x0.nucleus.object.format.Formatter;
 import me.clip.placeholderapi.PlaceholderAPI;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 
 public class Messages {
 
     public static String getPrefix() {
-        return ChatColor.translateAlternateColorCodes('&', Config.getMessagesConfig().getString("prefix"));
+        return Config.getMessagesConfig().getString("prefix");
     }
 
     public static String getMessage(String path) {
-        return ChatColor.translateAlternateColorCodes('&', Config.getMessagesConfig().getString(path));
+        return Config.getMessagesConfig().getString(path);
     }
 
     public static String getMessage(String path, BuiltinPlaceholders builtinPlaceholders) {

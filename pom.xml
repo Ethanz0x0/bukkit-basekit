@@ -84,19 +84,19 @@
         <dependency>
             <groupId>io.github.ethanz0x0</groupId>
             <artifactId>nucleus-config</artifactId>
-            <version>1.1.1</version>
+            <version>1.1.2</version>
         </dependency>
 
         <dependency>
             <groupId>io.github.ethanz0x0</groupId>
             <artifactId>nucleus-object</artifactId>
-            <version>1.1.1</version>
+            <version>1.1.2</version>
         </dependency>
 
         <dependency>
             <groupId>io.github.ethanz0x0</groupId>
             <artifactId>nucleus-common</artifactId>
-            <version>1.1.1</version>
+            <version>1.1.2</version>
         </dependency>
 
         <dependency>

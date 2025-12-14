@@ -6,7 +6,6 @@ import io.github.ethanz0x0.basekit.utils.MinecraftVersion;
 import io.github.ethanz0x0.basekit.utils.PlaceholderAPIHook;
 import io.github.ethanz0x0.nucleus.object.format.Formatter;
 import me.clip.placeholderapi.PlaceholderAPI;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 
 public enum Module {
@@ -67,7 +66,7 @@ public enum Module {
     }
 
     public String getText(String option) {
-        return ChatColor.translateAlternateColorCodes('&', getOption(option, ""));
+        return getOption(option, "");
     }
 
     public SoundData getSound(String option) {
