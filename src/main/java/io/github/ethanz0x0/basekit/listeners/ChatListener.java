@@ -14,8 +14,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class ChatListener implements Listener {
@@ -29,7 +29,10 @@ public class ChatListener implements Listener {
             if (event.isCancelled()) {
                 return;
             }
-
+            if (player.hasPermission(Module.CHAT_BLOCK_BAD_WORDS.getOption("bypass-permission",
+                    "basekit.bypass.block-bad-words"))) {
+                return;
+            }
             for (String keyWord : Module.CHAT_BLOCK_BAD_WORDS.getOption("key-words", new ArrayList<String>())) {
                 if (message.toLowerCase().contains(keyWord.toLowerCase())) {
                     event.setCancelled(true);
@@ -41,13 +44,20 @@ public class ChatListener implements Listener {
 
         Module.CHAT_HISTORY.ifEnabled(() -> {
             Module.CHAT_BLOCK_SIMILAR_MESSAGE.ifEnabled(() -> {
+                if (event.isCancelled()) {
+                    return;
+                }
+                if (player.hasPermission(Module.CHAT_BLOCK_SIMILAR_MESSAGE.getOption("bypass-permission",
+                        "basekit.bypass.block-similar-message"))) {
+                    return;
+                }
                 List<ChatRecord> records = ChatRecorder.getRecords(player);
                 if (records.isEmpty()) {
                     return;
                 }
                 ChatRecord lastMessage = records.get(records.size() - 1);
 
-                if (Duration.between(LocalDateTime.now(), lastMessage.time()).getSeconds() <= 120) {
+                if (Duration.between(new Date().toInstant(), lastMessage.time().toInstant()).getSeconds() <= 120) {
                     if (StringUtil.calculateSimilarity(lastMessage.message(), message) >=
                             Module.CHAT_BLOCK_SIMILAR_MESSAGE.getOption("similarity", 0.7D)) {
                         event.setCancelled(true);

@@ -37,4 +37,26 @@ public abstract class SimpleCommand extends Command {
                         .append("usage", "/" + getName() + " " + usage)
                         .build()));
     }
+
+    public void playerNotExist(CommandSender sender, String who) {
+        MessageUtil.sendMessage(sender, Messages.getPrefixedMessage("player-not-exist",
+                BuiltinPlaceholders.builder()
+                        .append("player", who)
+                        .build()));
+    }
+
+    public void playerNotOnline(CommandSender sender, String who) {
+        MessageUtil.sendMessage(sender, Messages.getPrefixedMessage("player-not-online",
+                BuiltinPlaceholders.builder()
+                        .append("player", who)
+                        .build()));
+    }
+
+    public void argumentTypeMismatch(CommandSender sender, int index, Class<?> clazz) {
+        MessageUtil.sendMessage(sender, Messages.getPrefixedMessage("argument-type-mismatch",
+                BuiltinPlaceholders.builder()
+                        .append("index", index)
+                        .append("type", clazz.getSimpleName())
+                        .build()));
+    }
 }

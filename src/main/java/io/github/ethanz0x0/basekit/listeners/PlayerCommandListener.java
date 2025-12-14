@@ -23,10 +23,14 @@ public class PlayerCommandListener implements Listener {
             if (event.isCancelled()) {
                 return;
             }
+            if (player.hasPermission(Module.COMMAND_EXECUTION_LIMITER.getOption("bypass-permission",
+                    "basekit.bypass.command-execution-limiter"))) {
+                return;
+            }
             if ((System.currentTimeMillis() - lastExecution.getOrDefault(player, 0L)) / 1000L <
                     Module.COMMAND_EXECUTION_LIMITER.getOption("interval", 3)) {
                 event.setCancelled(true);
-                MessageUtil.sendMessage(player, Module.HELP_COMMAND.getText(player, "prompt-message"));
+                MessageUtil.sendMessage(player, Module.COMMAND_EXECUTION_LIMITER.getText(player, "prompt-message"));
             } else {
                 lastExecution.put(player, System.currentTimeMillis());
             }
@@ -53,7 +57,8 @@ public class PlayerCommandListener implements Listener {
             if (Module.HELP_COMMAND.isEnabled() && "help".equalsIgnoreCase(command)) {
                 return;
             }
-            if (player.hasPermission(Module.DISABLED_COMMANDS.getOption("bypass-permission", ""))) {
+            if (player.hasPermission(Module.DISABLED_COMMANDS.getOption("bypass-permission",
+                    "basekit.bypass.disabled-commands"))) {
                 return;
             }
             ArrayList<String> disabledCommands = Module.DISABLED_COMMANDS.getOption("commands", new ArrayList<>());

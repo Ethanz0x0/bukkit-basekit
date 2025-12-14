@@ -1,12 +1,12 @@
 package io.github.ethanz0x0.basekit.data;
 
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 public record ChatRecord(
-        Player sender,
+        OfflinePlayer sender,
         String message,
-        LocalDateTime time
+        Date time
 ) {
 }

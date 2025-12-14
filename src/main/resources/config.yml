@@ -159,6 +159,7 @@ chat:
   # |------------------------------------------------------------------|
   block-bad-words:
     enabled: true
+    bypass-permission: "basekit.bypass.block-bad-words"
     prompt-message: "<red>Your message may contains bad words!</red>"
     key-words:
       - "fuck"
@@ -180,6 +181,7 @@ chat:
     block-similar-message:
       enabled: true
       similarity: 0.7
+      bypass-permission: "basekit.bypass.block-similar-message"
       prompt-message: "<red>You cannot send the same message twice!</red>"
 
 # |------------------------------------------------------------------|
@@ -190,4 +192,5 @@ chat:
 command-execution-limiter:
   enabled: true
   interval: 3 # Unit: Seconds
+  bypass-permission: "basekit.bypass.command-execution-limiter"
   prompt-message: "<red>You cannot execute command too fast!</red>"
