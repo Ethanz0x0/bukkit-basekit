@@ -5,26 +5,16 @@ import io.github.ethanz0x0.basekit.config.Messages;
 import io.github.ethanz0x0.basekit.schedulers.UpdateCheckerScheduler;
 import io.github.ethanz0x0.basekit.utils.MessageUtil;
 import io.github.ethanz0x0.basekit.utils.UpdateChecker;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
-public class BaseKitCommand extends Command {
+public class BaseKitCommand extends SimpleCommand {
 
     public BaseKitCommand() {
-        super("basekit");
-        setAliases(List.of("bk"));
+        super("basekit", "basekit.command.main", "bk");
     }
 
     @Override
-    public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
-        if (!sender.hasPermission("basekit.command.main")) {
-            MessageUtil.sendMessage(sender, Messages.getPrefixedMessage("command-no-permission"));
-            return true;
-        }
-
+    public void onExecute(CommandSender sender, String entrance, String[] args) {
         if (args.length == 1) {
             switch (args[0].toLowerCase()) {
                 case "version", "ver" -> {
@@ -37,7 +27,7 @@ public class BaseKitCommand extends Command {
                             MessageUtil.sendMessage(sender, Messages.getPrefixedMessage("update-checker-reminder"));
                         }
                     });
-                    return true;
+                    return;
                 }
                 case "reload" -> {
                     MessageUtil.sendMessage(sender, Messages.getPrefixedMessage("command-reload-performing"));
@@ -45,12 +35,11 @@ public class BaseKitCommand extends Command {
                     Config.getMessagesConfig().reload();
                     Config.getStartupInfoConfig().reload();
                     MessageUtil.sendMessage(sender, Messages.getPrefixedMessage("command-reload-success"));
-                    return true;
+                    return;
                 }
             }
         }
 
         sender.sendMessage("Under development...");
-        return false;
     }
 }

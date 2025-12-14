@@ -19,7 +19,8 @@ public enum Module {
     CHAT_MESSAGE_FORMAT("chat.message-format", MinecraftVersion.MINECRAFT_1_18),
     CHAT_HISTORY("chat.chat-history", MinecraftVersion.MINECRAFT_1_18),
     CHAT_BLOCK_SIMILAR_MESSAGE("chat.chat-history.block-similar-message", MinecraftVersion.MINECRAFT_1_18),
-    CHAT_BLOCK_BAD_WORDS("chat.block-bad-words", MinecraftVersion.MINECRAFT_1_18);
+    CHAT_BLOCK_BAD_WORDS("chat.block-bad-words", MinecraftVersion.MINECRAFT_1_18),
+    COMMAND_EXECUTION_LIMITER("command-execution-limiter", MinecraftVersion.MINECRAFT_1_18);
 
     private final String module;
     private final MinecraftVersion versionSupportAbove;

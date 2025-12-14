@@ -1,6 +1,8 @@
 package io.github.ethanz0x0.basekit;
 
 import io.github.ethanz0x0.basekit.commands.BaseKitCommand;
+import io.github.ethanz0x0.basekit.commands.BroadcastCommand;
+import io.github.ethanz0x0.basekit.commands.ChatHistoryCommand;
 import io.github.ethanz0x0.basekit.config.Config;
 import io.github.ethanz0x0.basekit.listeners.ChatListener;
 import io.github.ethanz0x0.basekit.listeners.PlayerCommandListener;
@@ -106,5 +108,7 @@ public class BaseKit extends JavaPlugin {
 
     private void registerCommands() {
         CommandUtil.registerCommand(new BaseKitCommand());
+        CommandUtil.registerCommand(new ChatHistoryCommand());
+        CommandUtil.registerCommand(new BroadcastCommand());
     }
 }

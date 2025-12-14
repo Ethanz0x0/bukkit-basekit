@@ -152,15 +152,42 @@ chat:
     enabled: true
     format: "<yellow>%%player%%</yellow><white>: %%message%%</white>"
     console-output: true
+  # |------------------------------------------------------------------|
+  # |                        Block Bad Words                           |
+  # |                      -------------------                         |
+  # | The message which contains bad words will be blocked.            |
+  # |------------------------------------------------------------------|
   block-bad-words:
     enabled: true
     prompt-message: "<red>Your message may contains bad words!</red>"
     key-words:
       - "fuck"
       - "shit"
+  # |------------------------------------------------------------------|
+  # |                          Chat History                            |
+  # |                        ----------------                          |
+  # | If enabled, the player's chat messages will be recorded. You can |
+  # | /chathistory command to view them.                               |
+  # |------------------------------------------------------------------|
   chat-history:
     enabled: true
+    # |------------------------------------------------------------------|
+    # |                     Block Similar Message                        |
+    # |                   -------------------------                      |
+    # | If the message to be sent is similar to the player's last chat,  |
+    # | it will be blocked.
+    # |------------------------------------------------------------------|
     block-similar-message:
       enabled: true
       similarity: 0.7
       prompt-message: "<red>You cannot send the same message twice!</red>"
+
+# |------------------------------------------------------------------|
+# |                   Command Execution Limiter                      |
+# |                 -----------------------------                    |
+# | Limit the interval between two command executions.               |
+# |------------------------------------------------------------------|
+command-execution-limiter:
+  enabled: true
+  interval: 3 # Unit: Seconds
+  prompt-message: "<red>You cannot execute command too fast!</red>"
