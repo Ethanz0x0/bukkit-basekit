@@ -12,10 +12,17 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <BUILD_NUMBER>0</BUILD_NUMBER>
+        <build.number>undefined</build.number>
     </properties>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -36,8 +43,7 @@
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Version>${project.version}</Main-Version>
-                                        <!--suppress UnresolvedMavenProperty -->
-                                        <Build-Number>${buildNumber}</Build-Number>
+                                        <Build-Number>${build.number}</Build-Number>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
