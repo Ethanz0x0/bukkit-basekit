@@ -19,7 +19,7 @@ jobs:
       checks: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup JDK 17
@@ -29,20 +29,20 @@ jobs:
           distribution: "temurin"
           cache: "maven"
 
-      - name: Run unit tests
+      - name: Run Unit Tests
         run: mvn test
 
-      - name: Build with maven
+      - name: Build with Maven
         run: mvn package -DskipTests
 
-      - name: Upload build artifact
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ github.sha }}
           path: target/*.jar
           retention-days: 7
 
-      - name: Create release
+      - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
